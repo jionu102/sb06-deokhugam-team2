@@ -66,4 +66,8 @@ public class Book {
     @Builder.Default
     @Column(nullable = false)
     private boolean deleted = false;
+
+    public void setDeletedAsTrue() {
+        this.deleted = true;
+    }
 }
