@@ -32,4 +32,9 @@ public class BookService {
         bookRepository.save(book);
         log.info("도서 논리 삭제 완료: {}", bookId);
     }
+
+    public void deleteHard(UUID bookId) {
+        bookRepository.deleteById(bookId);
+        log.info("도서 물리 삭제 완료: {}", bookId);
+    }
 }
