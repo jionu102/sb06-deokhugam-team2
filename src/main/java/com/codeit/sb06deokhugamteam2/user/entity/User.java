@@ -53,7 +53,7 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<reviewLike> reviewLikes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "targetUser", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<notification> notifications = new ArrayList<>();
 
     public User(String email, String nickname, String password) {
