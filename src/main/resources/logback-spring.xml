@@ -1,0 +1,50 @@
+<configuration>
+  <property name="LOG_PATH" value=".logs"/>
+
+  <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_PATH}/app.log</file>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- 하루마다 새로운 로그 파일 생성 -->
+      <fileNamePattern>${LOG_PATH}/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <!-- 보존 기간: 30일 -->
+      <maxHistory>30</maxHistory>
+      <!-- 압축해서 저장 가능 -->
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} [%thread] %-5level %logger{36} [%X{ipAddress} | %X{requestId} |
+        %X{requestMethod} | %X{requestUrl}] - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} [%thread] %-5level %logger{36} [%X{ipAddress} | %X{requestId} |
+        %X{requestMethod} | %X{requestUrl}] - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+
+  <springProfile name="local">
+    <root level="DEBUG">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ROLLING"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="test">
+    <root level="DEBUG">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="prod">
+    <root level="INFO">
+      <appender-ref ref="ROLLING"/>
+    </root>
+  </springProfile>
+
+</configuration>
