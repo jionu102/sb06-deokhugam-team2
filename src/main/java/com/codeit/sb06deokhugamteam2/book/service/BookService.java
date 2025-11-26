@@ -23,7 +23,7 @@ public class BookService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(()-> new EntityNotFoundException("도서를 찾을 수 없습니다: " + bookId));
 
-//        book.getReviewList().forEach(review -> {
+//        book.getReviews().forEach(review -> {
 //            review.setDeletedAsTrue();
 //            review.getComments().forEach(Comment::setDeletedAsTrue);
 //        });
