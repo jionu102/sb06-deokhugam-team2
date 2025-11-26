@@ -5,7 +5,7 @@ CREATE TABLE Books
   author        varchar   NOT NULL,
   description   varchar   NOT NULL,
   publisher     varchar   NOT NULL,
-  published_at  timestamp NOT NULL,
+  published_date date NOT NULL,
   isbn          varchar  ,
   thumbnail_url varchar  ,
   review_count  integer   NOT NULL,
