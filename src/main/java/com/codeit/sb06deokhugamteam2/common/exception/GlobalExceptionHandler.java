@@ -1,9 +1,9 @@
 package com.codeit.sb06deokhugamteam2.common.exception;
 
+import com.codeit.sb06deokhugamteam2.common.exception.exceptions.MDCException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -24,17 +24,48 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 @ResponseBody
 public class GlobalExceptionHandler {
+
+  /*
+  커스텀 예외처리 부분들
+   */
+
+  @ExceptionHandler(MDCException.class)
+  public ResponseEntity<ErrorResponse> MDCExceptionHandler(MDCException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getDetails());
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  /*
+  글로벌 예외처리 부분들.
+   */
+
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleValidationException(
       ConstraintViolationException ex) {
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
+
+    Map<String, Object> errorDetails = ((ConstraintViolationException) ex)
+        .getConstraintViolations()
+        .stream()
+        .collect(Collectors.toUnmodifiableMap(
+            violation -> {
+              // 어떤 파라미터/속성에서 오류가 났는지
+              // ex: "createUser.name" → 마지막 점(.) 이후만 사용하면 "name"
+              String path = violation.getPropertyPath().toString();
+              int lastDot = path.lastIndexOf('.');
+              return lastDot != -1 ? path.substring(lastDot + 1) : path;
+            },
+            ConstraintViolation::getMessage,
+            (existing, replacement) -> existing + ", " + replacement // 충돌 처리
+        ));
+
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST, errorDetails);
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
   @ExceptionHandler(MissingServletRequestParameterException.class)
   public ResponseEntity<ErrorResponse> handleValidationException(
       MissingServletRequestParameterException ex) {
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST, Map.of());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
@@ -42,7 +73,17 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleValidationException(
       MethodArgumentNotValidException ex) {
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
+
+    Map<String, Object> errorDetails = ((MethodArgumentNotValidException) ex)
+        .getBindingResult()
+        .getFieldErrors()
+        .stream()
+        .collect(
+            Collectors.toUnmodifiableMap(FieldError::getField, FieldError::getDefaultMessage
+                , (existing, replacement) -> existing + ", " + replacement));
+
+
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST, errorDetails);
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
@@ -50,14 +91,14 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ErrorResponse> handleTypeMismatch(
       MethodArgumentTypeMismatchException ex) {
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST, Map.of());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
   // 404 리소스를 찾을 수 없음
   @ExceptionHandler(NoSuchElementException.class)
   public ResponseEntity<ErrorResponse> handleNoSuchElement(NoSuchElementException ex) {
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_FOUND);
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_FOUND, Map.of());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
@@ -65,7 +106,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   public ResponseEntity<ErrorResponse> handleMethodNotSupported(
       HttpRequestMethodNotSupportedException ex) {
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.METHOD_NOT_ALLOWED);
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.METHOD_NOT_ALLOWED, Map.of());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
@@ -73,7 +114,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
       DataIntegrityViolationException ex) {
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.CONFLICT);
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.CONFLICT, Map.of());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
@@ -82,43 +123,16 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleException(Exception ex) {
     log.debug(ex.getMessage(), ex.getStackTrace());
     log.error(ex.getMessage(), ex);
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR);
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, Map.of());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
-  private ErrorResponse createErrorResponse(Exception ex, HttpStatus status) {
+  private ErrorResponse createErrorResponse(Exception ex, HttpStatus status, Map<String, Object> errorDetails) {
 
     Instant timeStamp = Instant.now();
     ErrorCode errorCode = ErrorCode.COMMON_EXCEPTION;
-    Map<String, Object> errorDetails = new HashMap<>();
 
     try {
-
-      if (ex instanceof MethodArgumentNotValidException) {
-        errorDetails = ((MethodArgumentNotValidException) ex)
-            .getBindingResult()
-            .getFieldErrors()
-            .stream()
-            .collect(
-                Collectors.toUnmodifiableMap(FieldError::getField, FieldError::getDefaultMessage
-                    , (existing, replacement) -> existing + ", " + replacement));
-      } else if (ex instanceof ConstraintViolationException) {
-        errorDetails = ((ConstraintViolationException) ex)
-            .getConstraintViolations()
-            .stream()
-            .collect(Collectors.toUnmodifiableMap(
-                violation -> {
-                  // 어떤 파라미터/속성에서 오류가 났는지
-                  // ex: "createUser.name" → 마지막 점(.) 이후만 사용하면 "name"
-                  String path = violation.getPropertyPath().toString();
-                  int lastDot = path.lastIndexOf('.');
-                  return lastDot != -1 ? path.substring(lastDot + 1) : path;
-                },
-                ConstraintViolation::getMessage,
-                (existing, replacement) -> existing + ", " + replacement // 충돌 처리
-            ));
-      }
-
       ErrorResponse error = ErrorResponse.builder()
           .timestamp(timeStamp)
           .message(errorCode.getMessage())
