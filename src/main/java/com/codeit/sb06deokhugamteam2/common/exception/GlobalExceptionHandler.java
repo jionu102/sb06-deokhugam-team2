@@ -1,6 +1,7 @@
 package com.codeit.sb06deokhugamteam2.common.exception;
 
 import com.codeit.sb06deokhugamteam2.common.exception.exceptions.MDCException;
+import com.codeit.sb06deokhugamteam2.common.exception.exceptions.NotificationException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -31,7 +32,13 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(MDCException.class)
   public ResponseEntity<ErrorResponse> MDCExceptionHandler(MDCException ex) {
-    ErrorResponse error = createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getDetails());
+    ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(NotificationException.class)
+  public ResponseEntity<ErrorResponse> MDCExceptionHandler(NotificationException ex) {
+    ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
@@ -121,7 +128,6 @@ public class GlobalExceptionHandler {
   // 500 서버 내부 오류 (예상치 못한 모든 오류 처리)
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleException(Exception ex) {
-    log.debug(ex.getMessage(), ex.getStackTrace());
     log.error(ex.getMessage(), ex);
     ErrorResponse error = createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, Map.of());
     return ResponseEntity.status(error.getStatus()).body(error);

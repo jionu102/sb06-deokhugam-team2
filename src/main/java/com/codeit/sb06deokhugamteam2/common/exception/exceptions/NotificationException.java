@@ -6,8 +6,8 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class MDCException extends BasicException{
-  public MDCException(ErrorCode errorCode, Map<String, Object> details, HttpStatus httpStatus) {
+public class NotificationException extends BasicException {
+  public NotificationException(ErrorCode errorCode, Map<String, Object> details, HttpStatus httpStatus) {
     super(errorCode, details, httpStatus);
   }
 }
