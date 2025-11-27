@@ -3,6 +3,7 @@ package com.codeit.sb06deokhugamteam2.book.controller;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookImageCreateRequest;
+import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.service.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,12 @@ public class BookController {
         BookDto bookDto = bookService.create(bookCreateRequest, bookImageCreateRequest);
 
         return ResponseEntity.ok(bookDto);
+    }
+
+    @GetMapping("/info")
+    public ResponseEntity<NaverBookDto> info(@RequestParam(value = "isbn") String isbn) {
+        NaverBookDto naverBookDto = bookService.info(isbn);
+        return ResponseEntity.ok(naverBookDto);
     }
 
     @DeleteMapping("/{bookId}")

@@ -1,7 +1,9 @@
 package com.codeit.sb06deokhugamteam2.book;
 
+import com.codeit.sb06deokhugamteam2.book.client.NaverSearchClient;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
+import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.repository.BookRepository;
 import com.codeit.sb06deokhugamteam2.book.storage.S3Storage;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +23,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,6 +41,9 @@ public class BookIntegrationTest {
 
     @Autowired
     private BookRepository bookRepository;
+
+    @MockitoBean
+    private NaverSearchClient naverSearchClient;
 
     @MockitoBean
     private S3Storage s3Storage;
@@ -85,5 +89,38 @@ public class BookIntegrationTest {
         assertThat(bookDto.getThumbnailUrl()).isEqualTo("https://test-bucket/test.jpg");
 
         assertThat(bookRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("isbn으로 조회 API호출 통합 테스트")
+    void bookInfo_Success() throws Exception {
+        String isbn = "123456789";
+        NaverBookDto clientNaverBookDto = new NaverBookDto();
+        clientNaverBookDto.setIsbn(isbn);
+        clientNaverBookDto.setTitle("title");
+        clientNaverBookDto.setDescription("description");
+        clientNaverBookDto.setPublisher("publisher");
+        clientNaverBookDto.setPublishedDate(LocalDate.now());
+        clientNaverBookDto.setAuthor("author");
+        clientNaverBookDto.setThumbnailImage("Base64 Encoding Image");
+
+        when(naverSearchClient.bookSearchByIsbn(isbn)).thenReturn(clientNaverBookDto);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.request(HttpMethod.GET, "/api/books/info")
+                .param("isbn", isbn)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+        String ResponseBody = result.getResponse().getContentAsString();
+        NaverBookDto naverBookDto = objectMapper.readValue(ResponseBody, NaverBookDto.class);
+
+        assertThat(naverBookDto.getTitle()).isEqualTo("title");
+        assertThat(naverBookDto.getIsbn()).isEqualTo(isbn);
+        assertThat(naverBookDto.getAuthor()).isEqualTo("author");
+        assertThat(naverBookDto.getPublisher()).isEqualTo("publisher");
+        assertThat(naverBookDto.getPublishedDate()).isEqualTo(LocalDate.now());
+        assertThat(naverBookDto.getDescription()).isEqualTo("description");
+        assertThat(naverBookDto.getThumbnailImage()).isEqualTo("Base64 Encoding Image");
     }
 }

@@ -1,8 +1,10 @@
 package com.codeit.sb06deokhugamteam2.book.service;
 
+import com.codeit.sb06deokhugamteam2.book.client.NaverSearchClient;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookImageCreateRequest;
+import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import com.codeit.sb06deokhugamteam2.book.mapper.BookMapper;
 import com.codeit.sb06deokhugamteam2.book.repository.BookRepository;
@@ -24,6 +26,7 @@ public class BookService {
     private final BookRepository bookRepository;
     private final S3Storage s3Storage;
     private final BookMapper bookMapper;
+    private final NaverSearchClient naverSearchClient;
 
     public BookDto create(BookCreateRequest bookCreateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
         Book book = Book.builder()
@@ -46,6 +49,10 @@ public class BookService {
         savedBook.update(thumbnailUrl);
 
         return bookMapper.toDto(savedBook);
+    }
+
+    public NaverBookDto info(String isbn) {
+        return naverSearchClient.bookSearchByIsbn(isbn);
     }
 
     public void deleteSoft(UUID bookId) {

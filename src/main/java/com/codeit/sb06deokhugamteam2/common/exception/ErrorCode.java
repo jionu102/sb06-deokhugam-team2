@@ -13,7 +13,8 @@ public enum ErrorCode {
   COMMON_EXCEPTION("오류가 발생 하였습니다."),
   EMPTY_DATA("데이터가 비어 있습니다."),
   INVALID_DATA("해당 데이터가 없습니다."),
-  AWS_EXCEPTION("AWS 작업 도중 오류가 발생했습니다.");
+  AWS_EXCEPTION("AWS 작업 도중 오류가 발생했습니다."),
+  NAVER_SEARCH_EXCEPTION("네이버 검색 요청에 실패했습니다.");
 
   private String message;
 
