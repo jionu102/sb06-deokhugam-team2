@@ -30,7 +30,7 @@ CREATE TABLE Comments
 
 CREATE TABLE Dashboard
 (
-    id                     NOT NULL,
+    id           uuid          NOT NULL,
     ranking_type varchar   NOT NULL,
     period_type  varchar   NOT NULL,
     score        float4    NOT NULL,
