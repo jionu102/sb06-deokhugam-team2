@@ -10,6 +10,11 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +22,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService{
   private final NotificationRepository repository;
+  private final JobLauncher jobLauncher;
+  private final Job readAllNoitificationsJob;
 
 
   @Override
@@ -34,5 +41,22 @@ public class NotificationServiceImpl implements NotificationService{
 
     NotificationDto dto = new NotificationDto(saved);
     return dto;
+  }
+
+  @Override
+  public void updateAllReadState(UUID userId) {
+    try
+    {
+      JobParameters jobParameters = new JobParametersBuilder()
+          .addLong("time",System.currentTimeMillis())
+          .addString("userId",userId.toString())
+          .toJobParameters();
+
+      jobLauncher.run(readAllNoitificationsJob,jobParameters);
+    }
+    catch (Exception e)
+    {
+      throw new NotificationException(ErrorCode.COMMON_EXCEPTION,Map.of("message",e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

@@ -7,4 +7,5 @@ import java.util.UUID;
 public interface NotificationService {
 
   NotificationDto updateReadState(UUID notificationId, UUID userId, NotificationUpdateRequest request);
+  void updateAllReadState(UUID userId);
 }
