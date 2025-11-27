@@ -12,6 +12,8 @@ import jakarta.persistence.Id;
 /*import jakarta.persistence.OneToMany;*/
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,7 +26,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
@@ -56,13 +60,11 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<ReviewLike> reviewLikes = new ArrayList<>();*/
 
-    public User(String email, String nickname, String password) {
-        this.email = email;
-        this.nickname = nickname;
-        this.password = password;
-    }
-
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void softDelete() {
+        this.deleted = true;
     }
 }
