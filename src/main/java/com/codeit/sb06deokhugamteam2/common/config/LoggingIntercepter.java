@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -29,7 +30,8 @@ public class LoggingIntercepter implements HandlerInterceptor {
 
       return HandlerInterceptor.super.preHandle(request, response, handler);
     } catch (Exception e) {
-      throw new MDCException(ErrorCode.COMMON_EXCEPTION, Map.of("message", e.getMessage()));
+      throw new MDCException(ErrorCode.COMMON_EXCEPTION, Map.of("message", e.getMessage()),
+          HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
