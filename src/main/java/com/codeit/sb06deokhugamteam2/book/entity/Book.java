@@ -76,6 +76,12 @@ public class Book {
     @Column(nullable = false)
     private boolean deleted = false;
 
+    public void update(String thumbnailUrl) {
+        if (thumbnailUrl != null) {
+            this.thumbnailUrl = thumbnailUrl;
+        }
+    }
+
     public void setDeletedAsTrue() {
         this.deleted = true;
     }

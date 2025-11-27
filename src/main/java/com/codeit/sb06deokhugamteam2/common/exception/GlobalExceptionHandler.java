@@ -1,5 +1,6 @@
 package com.codeit.sb06deokhugamteam2.common.exception;
 
+import com.codeit.sb06deokhugamteam2.common.exception.exceptions.AWSException;
 import com.codeit.sb06deokhugamteam2.common.exception.exceptions.MDCException;
 import com.codeit.sb06deokhugamteam2.common.exception.exceptions.NotificationException;
 import jakarta.validation.ConstraintViolation;
@@ -26,7 +27,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @ResponseBody
 public class GlobalExceptionHandler {
 
-  //<editor-fold desc="커스텀 예외처리 부분들">
+//<editor-fold desc="커스텀 예외처리 부분들">
+
   @ExceptionHandler(MDCException.class)
   public ResponseEntity<ErrorResponse> MDCExceptionHandler(MDCException ex) {
     ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
@@ -41,6 +43,13 @@ public class GlobalExceptionHandler {
 // </editor-fold>
 
   // <editor-fold desc="공통 예외처리 부분들">
+
+  @ExceptionHandler(AWSException.class)
+  public ResponseEntity<ErrorResponse> AWSExceptionHandler(AWSException ex) {
+    ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleValidationException(
       ConstraintViolationException ex) {
