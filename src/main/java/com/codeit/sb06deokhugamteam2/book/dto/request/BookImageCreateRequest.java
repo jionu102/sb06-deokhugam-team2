@@ -8,4 +8,5 @@ import lombok.Getter;
 public class BookImageCreateRequest {
     private byte[] bytes;
     private String contentType;
+    private String originalFilename;
 }

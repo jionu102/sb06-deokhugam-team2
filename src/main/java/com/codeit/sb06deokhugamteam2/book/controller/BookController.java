@@ -56,7 +56,8 @@ public class BookController {
             try {
                 BookImageCreateRequest bookImageCreateRequest = new BookImageCreateRequest(
                         imageData.getBytes(),
-                        imageData.getContentType()
+                        imageData.getContentType(),
+                        imageData.getOriginalFilename()
                 );
 
                 return Optional.of(bookImageCreateRequest);

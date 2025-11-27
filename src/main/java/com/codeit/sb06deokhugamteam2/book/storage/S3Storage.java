@@ -4,9 +4,11 @@ import com.codeit.sb06deokhugamteam2.common.exception.ErrorCode;
 import com.codeit.sb06deokhugamteam2.common.exception.exceptions.AWSException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -20,61 +22,40 @@ import java.util.UUID;
 @Component
 public class S3Storage {
     private final S3Client s3Client;
-    private final S3Presigner s3Presigner;
     private final String bucket;
-    private final Duration expiration;
+    private final String region;
 
     public S3Storage(
             @Value("${spring.cloud.aws.s3.bucket}")
             String bucket,
-            @Value("${spring.cloud.aws.s3.presigned-url-expiration}")
-            int expiration,
-            S3Client s3Client,
-            S3Presigner s3Presigner
+            @Value("${spring.cloud.aws.region.static}")
+            String region,
+            S3Client s3Client
     ) {
         this.s3Client = s3Client;
-        this.s3Presigner = s3Presigner;
         this.bucket = bucket;
-        this.expiration = Duration.ofSeconds(expiration);
+        this.region = region;
     }
 
-    public void putThumbnail(UUID bookId, byte[] bytes, String contentType) {
+    public void putThumbnail(String key, byte[] bytes, String contentType) {
         try {
             PutObjectRequest putObjectRequest =  PutObjectRequest.builder()
                     .bucket(bucket)
-                    .key(bookId.toString())
+                    .key(key)
+                    .contentType(contentType)
                     .build();
 
             RequestBody requestBody = RequestBody.fromBytes(bytes);
             s3Client.putObject(putObjectRequest, requestBody);
         } catch (S3Exception e) {
             Map<String, Object> details = Map.of(
-                    "message", e.getMessage()
+                    "key", key
             );
             throw new AWSException(ErrorCode.AWS_EXCEPTION, details);
         }
     }
 
-    public String getThumbnail(UUID bookId) {
-        try {
-            GetObjectRequest getObjectRequest =  GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(bookId.toString())
-                    .build();
-
-            GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
-                    .signatureDuration(expiration)
-                    .getObjectRequest(getObjectRequest)
-                    .build();
-
-            PresignedGetObjectRequest presignedGetObjectRequest = s3Presigner.presignGetObject(getObjectPresignRequest);
-
-            return presignedGetObjectRequest.url().toString();
-        } catch (S3Exception e) {
-            Map<String, Object> details = Map.of(
-                    "message", e.getMessage()
-            );
-            throw new AWSException(ErrorCode.AWS_EXCEPTION, details);
-        }
+    public String getThumbnail(String key) {
+            return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
     }
 }

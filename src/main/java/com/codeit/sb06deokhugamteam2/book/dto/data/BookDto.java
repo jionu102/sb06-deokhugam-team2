@@ -5,11 +5,12 @@ import lombok.Getter;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @Builder
 public class BookDto {
-    private String id;
+    private UUID id;
     private String title;
     private String author;
     private String publisher;

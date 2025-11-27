@@ -4,6 +4,7 @@ import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookImageCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
+import com.codeit.sb06deokhugamteam2.book.mapper.BookMapper;
 import com.codeit.sb06deokhugamteam2.book.repository.BookRepository;
 import com.codeit.sb06deokhugamteam2.book.storage.S3Storage;
 import jakarta.persistence.EntityNotFoundException;
@@ -36,8 +37,9 @@ public class BookService {
 
         Book savedBook = bookRepository.save(book);
         String thumbnailUrl = optionalBookImageCreateRequest.map(bookImageCreateRequest -> {
-                    s3Storage.putThumbnail(savedBook.getId(), bookImageCreateRequest.getBytes(), bookImageCreateRequest.getContentType());
-                    return s3Storage.getThumbnail(savedBook.getId());
+                    String key = savedBook.getId().toString() + "-" + bookImageCreateRequest.getOriginalFilename();
+                    s3Storage.putThumbnail(key, bookImageCreateRequest.getBytes(), bookImageCreateRequest.getContentType());
+                    return s3Storage.getThumbnail(key);
                 }
         ).orElse(null);
 
