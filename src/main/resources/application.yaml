@@ -18,3 +18,7 @@ spring:
   naver:
     client-id: ${NAVER_CLIENT_ID}
     client-secret: ${NAVER_CLIENT_SECRET}
+
+  batch:
+    job:
+      enabled: false

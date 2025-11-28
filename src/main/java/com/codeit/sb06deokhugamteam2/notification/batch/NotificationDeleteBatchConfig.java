@@ -4,29 +4,31 @@ import com.codeit.sb06deokhugamteam2.notification.entity.Notification;
 import com.codeit.sb06deokhugamteam2.notification.repository.NotificationRepository;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
-public class NotificationReadAllBatchConfig {
+public class NotificationDeleteBatchConfig {
 
   private final JobRepository jobRepository;
   private final PlatformTransactionManager transactionManager;
@@ -34,49 +36,41 @@ public class NotificationReadAllBatchConfig {
   private final NotificationRepository notificationRepository;
 
   @Bean
-  public Job readAllNoitificationsJob() {
-    return new JobBuilder("readAllNoitificationsJob",jobRepository)
-        .start(readAllNoitificationsStep())
+  public Job deleteAllNotificationsJob() {
+    return new JobBuilder("deleteAllNotificationsJob",jobRepository)
+        .start(deleteAllNotificationsStep())
         .build();
   }
 
   @Bean
-  public Step readAllNoitificationsStep() {
-    return new StepBuilder("readAllNoitificationsStep", jobRepository)
+  public Step deleteAllNotificationsStep() {
+    return new StepBuilder("deleteAllNotificationsStep", jobRepository)
         .<Notification, Notification>chunk(100, transactionManager)
-        .reader(readAllNoitificationsItemReader(null))
-        .processor(readAllNoitificationsItemProcessor())
-        .writer(writeAllNoitificationsItemWriter())
+        .reader(deleteAllNotificationsItemReader())
+        .writer(deleteAllNotificationWriter())
         .build();
   }
 
   @Bean
   @StepScope
-  public JpaPagingItemReader<Notification> readAllNoitificationsItemReader(
-      @Value("#{jobParameters['userId']}") String userId
-  ) {
+  public JpaPagingItemReader<Notification> deleteAllNotificationsItemReader()
+  {
+    Instant oneWeek = Instant.now().minus(7, ChronoUnit.DAYS);
     return new JpaPagingItemReaderBuilder<Notification>()
-        .name("readAllNoitificationsItemReader")
+        .name("deleteAllNotificationsItemReader")
         .entityManagerFactory(entityManagerFactory)
         .queryString(
-            "SELECT n FROM Notification n "
-                + "WHERE n.userId = :userId AND "
-                + "FUNCTION('DATE_TRUNC', 'second', n.createdAt) = FUNCTION('DATE_TRUNC', 'second', n.confirmedAt)")
-        .parameterValues(Map.of("userId", UUID.fromString(userId)))
+            "SELECT n FROM Notification n " +
+                "WHERE n.createdAt !=  n.confirmedAt " +
+                "AND n.createdAt < :oneWeekAgo")
+        .parameterValues(Map.of("oneWeekAgo", oneWeek))
         .pageSize(100)
         .build();
   }
 
   @Bean
-  public ItemProcessor<Notification, Notification> readAllNoitificationsItemProcessor() {
-    return notification -> {
-      notification.setConfirmedAt(Instant.now());
-      return notification;
-    };
-  }
-
-  @Bean
-  public ItemWriter<Notification> writeAllNoitificationsItemWriter() {
-    return notifications -> notificationRepository.saveAll(notifications);
+  public ItemWriter<Notification> deleteAllNotificationWriter()
+  {
+    return notifications -> notificationRepository.deleteAll(notifications);
   }
 }

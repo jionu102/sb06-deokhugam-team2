@@ -1,5 +1,6 @@
 package com.codeit.sb06deokhugamteam2;
 
+import static com.codeit.sb06deokhugamteam2.notification.entity.QNotification.notification;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.codeit.sb06deokhugamteam2.notification.NotificationComponent;
@@ -11,6 +12,9 @@ import com.codeit.sb06deokhugamteam2.notification.repository.NotificationReposit
 import com.codeit.sb06deokhugamteam2.notification.service.NotificationService;
 import jakarta.transaction.Transactional;
 import java.lang.annotation.Documented;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +46,9 @@ public class NotificationTest {
 
   @Autowired
   private Job readAllNoitificationsJob;
+
+  @Autowired
+  private Job deleteAllNotificationsJob;
 
   @Autowired
   private NotificationRepository notificationRepository;
@@ -135,5 +142,27 @@ public class NotificationTest {
     assertThat(notification).isNotNull();
     assertThat(notification.getUserId()).isEqualTo(preSetupData.getUserId());
     assertThat(notification.getConfirmedAt()).isNotEqualTo(preSetupData.getCreatedAt());
+  }
+
+
+  @Test
+  @DisplayName("알림 일괄 삭제 성공 - batch 직접 실행")
+  public void deleteAllNotificationServiceTest()
+      throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
+
+    notificationService.updateAllReadState(preSetupData.getUserId());
+    List<Notification> notifications = notificationRepository.findByUserId(preSetupData.getUserId()).get();
+    notifications.forEach(x -> x.setCreatedAt(Instant.now().minus(8, ChronoUnit.DAYS)));
+    notificationRepository.saveAll(notifications);
+
+    JobParameters jobParameters = new JobParametersBuilder()
+        .addLong("time",System.currentTimeMillis())
+        .toJobParameters();
+
+    jobLauncher.run(deleteAllNotificationsJob,jobParameters);
+
+    List<Notification> result = notificationRepository.findByUserId(preSetupData.getUserId()).get();
+
+    assertThat(result).isEmpty();
   }
 }
