@@ -42,6 +42,7 @@ public class BasicReviewService implements ReviewService {
                 .ifPresent(bookId -> { throw new DuplicateReviewException(bookId); });
         ReviewDomain newReview = reviewMapper.toDomain(request);
         reviewRepository.save(newReview);
+        bookRepository.updateOnReviewCreation(book.id(), newReview.rating());
         return reviewMapper.toDto(newReview, book, user);
     }
 }

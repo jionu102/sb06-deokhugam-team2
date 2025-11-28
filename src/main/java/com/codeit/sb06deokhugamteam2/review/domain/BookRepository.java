@@ -6,4 +6,6 @@ import java.util.UUID;
 public interface BookRepository {
 
     Optional<ReviewBook> findById(UUID bookId);
+
+    void updateOnReviewCreation(UUID bookId, int rating);
 }

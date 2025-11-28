@@ -27,4 +27,11 @@ public class JpaBookRepository implements BookRepository {
         var reviewBook = new ReviewBook(book.getId(), book.getTitle(), book.getThumbnailUrl());
         return Optional.of(reviewBook);
     }
+
+    @Override
+    public void updateOnReviewCreation(UUID bookId, int rating) {
+        Book book = em.find(Book.class, bookId);
+        book.incrementReviewCount();
+        book.plusRating(rating);
+    }
 }
