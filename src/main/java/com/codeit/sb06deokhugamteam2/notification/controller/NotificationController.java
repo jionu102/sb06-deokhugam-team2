@@ -29,4 +29,11 @@ public class NotificationController {
 
     return ResponseEntity.status(HttpStatus.OK).body(notificationService.updateReadState(notificationId, userId, request));
   }
+
+  @PatchMapping("/read-all")
+  public ResponseEntity<Void> updateAll(@RequestHeader("Deokhugam-Request-User-ID") UUID userId)
+  {
+    notificationService.updateAllReadState(userId);
+    return ResponseEntity.status(HttpStatus.OK).build();
+  }
 }

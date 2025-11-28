@@ -17,9 +17,16 @@ public class BookMapper {
                 .description(book.getDescription())
                 .publishedDate(book.getPublishedDate())
                 .reviewCount(book.getReviewCount())
-                .rating(book.getRatingSum())
-                .thumbnailUrl(book.getThumbnailUrl() != null ? book.getThumbnailUrl() : "")
+                .rating(ratingOperation(book.getReviewCount(), book.getRatingSum()))
+                .thumbnailUrl(book.getThumbnailUrl())
                 .publisher(book.getPublisher())
                 .build();
+    }
+
+    private double ratingOperation(int reviewCount, double ratingSum) {
+        if (reviewCount > 0 && ratingSum > 0) {
+            return ratingSum / reviewCount;
+        }
+        return 0.0;
     }
 }

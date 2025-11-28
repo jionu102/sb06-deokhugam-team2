@@ -1,4 +1,4 @@
-package com.codeit.sb06deokhugamteam2.review.entity;
+package com.codeit.sb06deokhugamteam2.review.infra.persistence.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

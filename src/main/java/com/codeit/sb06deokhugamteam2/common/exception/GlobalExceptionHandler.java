@@ -1,8 +1,6 @@
 package com.codeit.sb06deokhugamteam2.common.exception;
 
-import com.codeit.sb06deokhugamteam2.common.exception.exceptions.AWSException;
-import com.codeit.sb06deokhugamteam2.common.exception.exceptions.MDCException;
-import com.codeit.sb06deokhugamteam2.common.exception.exceptions.NotificationException;
+import com.codeit.sb06deokhugamteam2.common.exception.exceptions.*;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -27,9 +25,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @ResponseBody
 public class GlobalExceptionHandler {
 
-  /*
-  커스텀 예외처리 부분들
-   */
+//<editor-fold desc="커스텀 예외처리 부분들">
 
   @ExceptionHandler(MDCException.class)
   public ResponseEntity<ErrorResponse> MDCExceptionHandler(MDCException ex) {
@@ -43,15 +39,26 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
+  @ExceptionHandler(BookException.class)
+  public ResponseEntity<ErrorResponse> handleBookException(BookException ex) {
+      ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
+      return ResponseEntity.status(error.getStatus()).body(error);
+  }
+// </editor-fold>
+
+  // <editor-fold desc="공통 예외처리 부분들">
+
   @ExceptionHandler(AWSException.class)
-  public ResponseEntity<ErrorResponse> AWSExceptionHandler(AWSException ex) {
+  public ResponseEntity<ErrorResponse> handleAWSException(AWSException ex) {
       ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
       return ResponseEntity.status(error.getStatus()).body(error);
   }
 
-  /*
-  글로벌 예외처리 부분들.
-   */
+  @ExceptionHandler(NaverSearchException.class)
+  public ResponseEntity<ErrorResponse> handleNaverSearchException(NaverSearchException ex) {
+      ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
+      return ResponseEntity.status(error.getStatus()).body(error);
+  }
 
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleValidationException(
@@ -139,7 +146,9 @@ public class GlobalExceptionHandler {
     ErrorResponse error = createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, Map.of());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
+  // </editor-fold>
 
+  // <editor-fold desc="에러 양식 생성하는 부분 (클라이언트에 리턴하는 양식)">
   private ErrorResponse createErrorResponse(Exception ex, HttpStatus status, Map<String, Object> errorDetails) {
 
     Instant timeStamp = Instant.now();
@@ -159,4 +168,5 @@ public class GlobalExceptionHandler {
       return null;
     }
   }
+  // </editor-fold>
 }

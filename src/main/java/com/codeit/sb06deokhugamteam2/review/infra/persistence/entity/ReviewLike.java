@@ -1,6 +1,9 @@
-package com.codeit.sb06deokhugamteam2.review.entity;
+package com.codeit.sb06deokhugamteam2.review.infra.persistence.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;

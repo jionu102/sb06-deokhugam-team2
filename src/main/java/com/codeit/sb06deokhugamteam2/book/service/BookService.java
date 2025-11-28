@@ -1,18 +1,25 @@
 package com.codeit.sb06deokhugamteam2.book.service;
 
+import com.codeit.sb06deokhugamteam2.book.client.NaverSearchClient;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookImageCreateRequest;
+import com.codeit.sb06deokhugamteam2.book.dto.request.BookUpdateRequest;
+import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import com.codeit.sb06deokhugamteam2.book.mapper.BookMapper;
 import com.codeit.sb06deokhugamteam2.book.repository.BookRepository;
 import com.codeit.sb06deokhugamteam2.book.storage.S3Storage;
+import com.codeit.sb06deokhugamteam2.common.exception.ErrorCode;
+import com.codeit.sb06deokhugamteam2.common.exception.exceptions.BookException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,6 +31,7 @@ public class BookService {
     private final BookRepository bookRepository;
     private final S3Storage s3Storage;
     private final BookMapper bookMapper;
+    private final NaverSearchClient naverSearchClient;
 
     public BookDto create(BookCreateRequest bookCreateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
         Book book = Book.builder()
@@ -43,9 +51,52 @@ public class BookService {
                 }
         ).orElse(null);
 
-        savedBook.update(thumbnailUrl);
+        savedBook.updateThumbnailUrl(thumbnailUrl);
 
         return bookMapper.toDto(savedBook);
+    }
+
+    @Transactional(readOnly = true)
+    public NaverBookDto info(String isbn) {
+        return naverSearchClient.bookSearchByIsbn(isbn);
+    }
+
+    public BookDto update(UUID bookId, BookUpdateRequest bookUpdateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
+        Book findBook = bookRepository.findById(bookId).orElseThrow(
+                () -> new BookException(ErrorCode.NO_ID_VARIABLE,
+                        Map.of("bookId", bookId),
+                        HttpStatus.NOT_FOUND
+                )
+        );
+
+        String thumbnailUrl = optionalBookImageCreateRequest.map(bookImageCreateRequest -> {
+            if (findBook.getThumbnailUrl() != null) {
+                String url = findBook.getThumbnailUrl();
+                String oldKey = url.substring(url.lastIndexOf("/") + 1);
+                s3Storage.deleteThumbnail(oldKey);
+            }
+            String newKey = findBook.getId().toString() + "-" + bookImageCreateRequest.getOriginalFilename();
+            s3Storage.putThumbnail(newKey, bookImageCreateRequest.getBytes(), bookImageCreateRequest.getContentType());
+            return s3Storage.getThumbnail(newKey);
+        }).orElseGet(() -> {
+            if (findBook.getThumbnailUrl() != null) {
+                String url = findBook.getThumbnailUrl();
+                String oldKey = url.substring(url.lastIndexOf("/") + 1);
+                s3Storage.deleteThumbnail(oldKey);
+            }
+            return null;
+        });
+
+        findBook.updateAll(
+                bookUpdateRequest.getTitle(),
+                bookUpdateRequest.getAuthor(),
+                bookUpdateRequest.getDescription(),
+                bookUpdateRequest.getPublisher(),
+                bookUpdateRequest.getPublishedDate(),
+                thumbnailUrl
+        );
+
+        return bookMapper.toDto(findBook);
     }
 
     public void deleteSoft(UUID bookId) {

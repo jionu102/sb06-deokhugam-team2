@@ -1,6 +1,6 @@
 package com.codeit.sb06deokhugamteam2.comment.entity;
 
-import com.codeit.sb06deokhugamteam2.review.entity.Review;
+import com.codeit.sb06deokhugamteam2.review.infra.persistence.entity.Review;
 import com.codeit.sb06deokhugamteam2.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;

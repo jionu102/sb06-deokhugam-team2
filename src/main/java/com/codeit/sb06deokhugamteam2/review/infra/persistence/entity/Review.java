@@ -1,5 +1,7 @@
-package com.codeit.sb06deokhugamteam2.review.entity;
+package com.codeit.sb06deokhugamteam2.review.infra.persistence.entity;
 
+import com.codeit.sb06deokhugamteam2.book.entity.Book;
+import com.codeit.sb06deokhugamteam2.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
@@ -8,13 +10,24 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Reviews")
+@Table(name = "Reviews", uniqueConstraints = {
+        @UniqueConstraint(name = "reviews_pk", columnNames = {"book_id", "user_id"})
+})
 public class Review {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private UUID id;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "book_id", nullable = false)
+    private Book book;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @NotNull
     @Column(name = "rating", nullable = false)
@@ -47,6 +60,16 @@ public class Review {
 
     public Review id(UUID id) {
         this.id = id;
+        return this;
+    }
+
+    public Review book(Book book) {
+        this.book = book;
+        return this;
+    }
+
+    public Review user(User user) {
+        this.user = user;
         return this;
     }
 
@@ -87,6 +110,14 @@ public class Review {
 
     public UUID id() {
         return id;
+    }
+
+    public Book book() {
+        return book;
+    }
+
+    public User user() {
+        return user;
     }
 
     public Integer rating() {

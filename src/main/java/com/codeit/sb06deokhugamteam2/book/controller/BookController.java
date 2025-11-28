@@ -3,6 +3,8 @@ package com.codeit.sb06deokhugamteam2.book.controller;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookImageCreateRequest;
+import com.codeit.sb06deokhugamteam2.book.dto.request.BookUpdateRequest;
+import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.service.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +29,27 @@ public class BookController {
             @RequestPart(value = "bookData") @Valid BookCreateRequest bookCreateRequest,
             @RequestPart(value = "thumbnailImage", required = false) MultipartFile imageData
     ) {
-        Optional<BookImageCreateRequest> bookImageCreateRequest = resolveBookImageCreateRequest(imageData);
+        Optional<BookImageCreateRequest> bookImageCreateRequest =
+                Optional.ofNullable(imageData).flatMap(this::resolveBookImageCreateRequest);
         BookDto bookDto = bookService.create(bookCreateRequest, bookImageCreateRequest);
 
+        return ResponseEntity.ok(bookDto);
+    }
+
+    @GetMapping("/info")
+    public ResponseEntity<NaverBookDto> info(@RequestParam(value = "isbn") String isbn) {
+        NaverBookDto naverBookDto = bookService.info(isbn);
+        return ResponseEntity.ok(naverBookDto);
+    }
+
+    @PatchMapping(value = "/{bookId}", consumes =  MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<BookDto> update(
+            @PathVariable(value = "bookId") UUID bookId,
+            @RequestPart(value = "bookData") @Valid BookUpdateRequest bookUpdateRequest,
+            @RequestPart(value = "thumbnailImage", required = false) MultipartFile imageData) {
+        Optional<BookImageCreateRequest> bookImageCreateRequest =
+                Optional.ofNullable(imageData).flatMap(this::resolveBookImageCreateRequest);
+        BookDto bookDto = bookService.update(bookId, bookUpdateRequest, bookImageCreateRequest);
         return ResponseEntity.ok(bookDto);
     }
 
@@ -50,7 +70,7 @@ public class BookController {
     }
 
     private Optional<BookImageCreateRequest> resolveBookImageCreateRequest(MultipartFile imageData) {
-        if (imageData.isEmpty()) {
+        if (imageData == null || imageData.isEmpty()) {
             return Optional.empty();
         } else {
             try {

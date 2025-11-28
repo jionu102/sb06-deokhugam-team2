@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class BookCreateRequest {
+public class BookUpdateRequest {
     @NotNull
     @NotBlank
     private String title;
@@ -21,12 +21,9 @@ public class BookCreateRequest {
     @NotBlank
     @Length(max = 1000)
     private String description;
-    @NotNull
     @NotBlank
+    @NotNull
     private String publisher;
     @NotNull
     private LocalDate publishedDate;
-    @NotNull
-    @NotBlank
-    private String isbn;
 }
