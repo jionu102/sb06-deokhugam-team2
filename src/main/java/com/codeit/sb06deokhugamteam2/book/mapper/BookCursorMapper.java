@@ -13,7 +13,7 @@ public class BookCursorMapper {
     public CursorPageResponsePopularBookDto toCursorBookDto(List<PopularBookDto> popularBookDtoList, Integer limit) {
 
         if(popularBookDtoList.isEmpty()) {
-            CursorPageResponsePopularBookDto.builder()
+            return CursorPageResponsePopularBookDto.builder()
                     .content(popularBookDtoList)
                     .nextCursor(null)
                     .nextAfter(null)
