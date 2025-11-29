@@ -238,8 +238,11 @@ public class BookIntegrationTest {
         String responseBody = result.getResponse().getContentAsString();
         CursorPageResponsePopularBookDto cursorDto = objectMapper.readValue(responseBody, CursorPageResponsePopularBookDto.class);
 
-        assertThat(cursorDto.content()).hasSize(4+1);  // 서버에서 +1 조회한 건 hasNext 체크용
+        assertThat(cursorDto.size()).isEqualTo(4);
         assertThat(cursorDto.content().get(0).title()).isEqualTo("title1");
         assertThat(cursorDto.content().get(3).title()).isEqualTo("title4");
+        assertThat(cursorDto.hasNext()).isTrue();
+        assertThat(cursorDto.nextCursor()).isEqualTo("4");
+        assertThat(cursorDto.nextAfter()).isEqualTo(cursorDto.content().get(3).createdAt());
     }
 }

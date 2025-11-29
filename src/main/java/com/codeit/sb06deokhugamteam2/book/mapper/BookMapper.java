@@ -52,26 +52,4 @@ public class BookMapper {
                 .createdAt(dashBoard.getCreatedAt())
                 .build();
     }
-
-    public CursorPageResponsePopularBookDto toCursorBookDto(List<PopularBookDto> popularBookDtoList, Integer limit) {
-
-        boolean hasNext = false;
-        if (popularBookDtoList.size() > limit) {
-            popularBookDtoList.remove(limit);
-            hasNext = true;
-        }
-
-        String nextCursor = popularBookDtoList.isEmpty() ? null : popularBookDtoList.get(popularBookDtoList.size() - 1).rank().toString();
-
-        Instant nextAfter = popularBookDtoList.isEmpty() ? null : popularBookDtoList.get(popularBookDtoList.size() - 1).createdAt();
-
-        return new CursorPageResponsePopularBookDto(
-                popularBookDtoList,
-                nextCursor,
-                nextAfter,
-                popularBookDtoList.size(),
-                null,       // 커서 페이지네이션에서는 totalElements 필요 x, 응답에 포함되긴 함.
-                hasNext
-        );
-    }
 }

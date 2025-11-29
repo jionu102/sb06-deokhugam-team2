@@ -9,6 +9,7 @@ import com.codeit.sb06deokhugamteam2.book.dto.request.BookImageCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookUpdateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
+import com.codeit.sb06deokhugamteam2.book.mapper.BookCursorMapper;
 import com.codeit.sb06deokhugamteam2.book.mapper.BookMapper;
 import com.codeit.sb06deokhugamteam2.book.repository.BookRepository;
 import com.codeit.sb06deokhugamteam2.book.storage.S3Storage;
@@ -43,6 +44,7 @@ public class BookService {
     private final DashBoardRepository dashBoardRepository;
     private final S3Storage s3Storage;
     private final BookMapper bookMapper;
+    private final BookCursorMapper bookCursorMapper;
     private final NaverSearchClient naverSearchClient;
 
     public BookDto create(BookCreateRequest bookCreateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
@@ -125,9 +127,7 @@ public class BookService {
             );
         });
 
-        CursorPageResponsePopularBookDto response = bookMapper.toCursorBookDto(popularBookDtoList, limit);
-
-        return response;
+        return bookCursorMapper.toCursorBookDto(popularBookDtoList, limit);
     }
 
     public void deleteSoft(UUID bookId) {
