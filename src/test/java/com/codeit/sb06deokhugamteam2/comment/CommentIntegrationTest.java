@@ -1,7 +1,7 @@
 package com.codeit.sb06deokhugamteam2.comment;
 
 import com.codeit.sb06deokhugamteam2.comment.repository.CommentRepository;
-import com.codeit.sb06deokhugamteam2.review.entity.Review;
+//import com.codeit.sb06deokhugamteam2.review.entity.Review;
 import com.codeit.sb06deokhugamteam2.user.entity.User;
 import com.codeit.sb06deokhugamteam2.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

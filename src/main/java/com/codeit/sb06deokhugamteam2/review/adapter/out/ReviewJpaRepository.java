@@ -69,8 +69,7 @@ public class ReviewJpaRepository implements ReviewRepository {
 
     @Override
     public ReviewDetail findReviewDetailById(UUID reviewId) {
-        Predicate[] predicates = {review.id.eq(reviewId), review.deleted.eq(false)};
-        return findReviewDetail(null, predicates).fetchOne();
+        return findReviewDetail(null, review.id.eq(reviewId)).fetchOne();
     }
 
     private JPAQuery<ReviewDetail> findReviewDetail(UUID requestUserId, Predicate... predicate) {
@@ -125,8 +124,7 @@ public class ReviewJpaRepository implements ReviewRepository {
                 bookIdEq(query.bookId()),
                 userIdEq(query.userId()),
                 keywordContains(query.keyword()),
-                cursorExpressions(query),
-                review.deleted.eq(false)
+                cursorExpressions(query)
         };
         return findReviewDetail(query.requestUserId(), predicates)
                 .orderBy(orderByExpressions(query))
@@ -191,8 +189,7 @@ public class ReviewJpaRepository implements ReviewRepository {
                 .where(
                         userIdEq(query.userId()),
                         bookIdEq(query.bookId()),
-                        keywordContains(query.keyword()),
-                        review.deleted.eq(false)
+                        keywordContains(query.keyword())
                 )
                 .fetchOne();
 
@@ -201,8 +198,7 @@ public class ReviewJpaRepository implements ReviewRepository {
 
     @Override
     public ReviewDetail findReviewDetail(ReviewQuery query) {
-        Predicate[] predicates = {review.id.eq(query.reviewId()), review.deleted.eq(false)};
-        return findReviewDetail(query.requestUserId(), predicates)
+        return findReviewDetail(query.requestUserId(), review.id.eq(query.reviewId()))
                 .fetchOne();
     }
 }

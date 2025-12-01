@@ -25,8 +25,7 @@ public class ReviewJpaMapper {
                 .likeCount(0)
                 .commentCount(0)
                 .createdAt(snapshot.createdAt())
-                .updatedAt(snapshot.updatedAt())
-                .deleted(Boolean.FALSE);
+                .updatedAt(snapshot.updatedAt());
     }
 
     public ReviewSummary toReviewSummary(

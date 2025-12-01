@@ -4,7 +4,7 @@ import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import com.codeit.sb06deokhugamteam2.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SoftDelete;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
+@SoftDelete
 @Table(name = "Reviews", uniqueConstraints = {
         @UniqueConstraint(name = "reviews_pk", columnNames = {"book_id", "user_id"})
 })
@@ -47,7 +48,7 @@ public class Review {
     @Column(name = "comment_count", nullable = false)
     private Integer commentCount;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "review")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReviewLike> likes = new HashSet<>();
 
     @NotNull
@@ -57,11 +58,6 @@ public class Review {
     @NotNull
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    @NotNull
-    @ColumnDefault("false")
-    @Column(name = "deleted", nullable = false)
-    private Boolean deleted = false;
 
     public Review id(UUID id) {
         this.id = id;
@@ -98,8 +94,15 @@ public class Review {
         return this;
     }
 
-    public Review likes(Set<ReviewLike> likes) {
-        this.likes = likes;
+    public Review addLike(ReviewLike reviewLike) {
+        this.likes.add(reviewLike);
+        reviewLike.review(this);
+        return this;
+    }
+
+    public Review removeLike(ReviewLike reviewLike) {
+        this.likes.remove(reviewLike);
+        reviewLike.review(null);
         return this;
     }
 
@@ -110,11 +113,6 @@ public class Review {
 
     public Review updatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
-        return this;
-    }
-
-    public Review deleted(Boolean deleted) {
-        this.deleted = deleted;
         return this;
     }
 
@@ -156,9 +154,5 @@ public class Review {
 
     public Instant updatedAt() {
         return updatedAt;
-    }
-
-    public Boolean deleted() {
-        return deleted;
     }
 }

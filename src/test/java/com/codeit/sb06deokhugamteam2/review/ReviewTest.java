@@ -26,7 +26,7 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 @AutoConfigureMockMvc
 @AutoConfigureTestEntityManager
 @Transactional
-class ReviewControllerTest {
+class ReviewTest {
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -67,7 +67,6 @@ class ReviewControllerTest {
                         softly.assertThat(saved.commentCount()).isEqualTo(0);
                         softly.assertThat(saved.createdAt()).isAfterOrEqualTo(now);
                         softly.assertThat(saved.updatedAt()).isEqualTo(saved.createdAt()).isAfterOrEqualTo(now);
-                        softly.assertThat(saved.deleted()).isFalse();
                     });
                 });
     }
