@@ -9,6 +9,7 @@ import com.codeit.sb06deokhugamteam2.book.dto.request.BookImageCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookUpdateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
+import com.codeit.sb06deokhugamteam2.book.mapper.BookCursorMapper;
 import com.codeit.sb06deokhugamteam2.book.mapper.BookMapper;
 import com.codeit.sb06deokhugamteam2.book.repository.BookRepository;
 import com.codeit.sb06deokhugamteam2.book.storage.S3Storage;
@@ -16,8 +17,8 @@ import com.codeit.sb06deokhugamteam2.common.exception.ErrorCode;
 import com.codeit.sb06deokhugamteam2.common.exception.exceptions.BookException;
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import com.codeit.sb06deokhugamteam2.common.enums.RankingType;
-import com.codeit.sb06deokhugamteam2.dashboard.entity.DashBoard;
-import com.codeit.sb06deokhugamteam2.dashboard.repository.DashBoardRepository;
+import com.codeit.sb06deokhugamteam2.dashboard.entity.Dashboard;
+import com.codeit.sb06deokhugamteam2.dashboard.repository.DashboardRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +41,10 @@ import java.util.UUID;
 public class BookService {
 
     private final BookRepository bookRepository;
-    private final DashBoardRepository dashBoardRepository;
+    private final DashboardRepository dashBoardRepository;
     private final S3Storage s3Storage;
     private final BookMapper bookMapper;
+    private final BookCursorMapper bookCursorMapper;
     private final NaverSearchClient naverSearchClient;
 
     public BookDto create(BookCreateRequest bookCreateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
@@ -113,21 +115,19 @@ public class BookService {
 
     public CursorPageResponsePopularBookDto getPopularBooks(PeriodType period, String cursor, Instant after, Sort.Direction direction, Integer limit) {
 
-        List<DashBoard> bookDashboard = dashBoardRepository.findPopularBookListByCursor(RankingType.BOOK, period, cursor, after, direction, limit);
+        List<Dashboard> bookDashboard = dashBoardRepository.findPopularBookListByCursor(RankingType.BOOK, period, cursor, after, direction, limit);
 
         List<PopularBookDto> popularBookDtoList = new ArrayList<>();
 
-        bookDashboard.forEach(dashBoard -> {
-            Book book = bookRepository.findById(dashBoard.getEntityId())
-                    .orElseThrow(() -> new EntityNotFoundException("도서를 찾을 수 없습니다: " + dashBoard.getEntityId()));
+        bookDashboard.forEach(dashboard -> {
+            Book book = bookRepository.findById(dashboard.getEntityId())
+                    .orElseThrow(() -> new EntityNotFoundException("도서를 찾을 수 없습니다: " + dashboard.getEntityId()));
             popularBookDtoList.add(
-                    bookMapper.toDto(dashBoard, book, period)
+                    bookMapper.toDto(dashboard, book, period)
             );
         });
 
-        CursorPageResponsePopularBookDto response = bookMapper.toCursorBookDto(popularBookDtoList, limit);
-
-        return response;
+        return bookCursorMapper.toCursorBookDto(popularBookDtoList, limit);
     }
 
     public void deleteSoft(UUID bookId) {

@@ -60,9 +60,9 @@ public class BookController {
 
     @GetMapping("/popular")
     public ResponseEntity<CursorPageResponsePopularBookDto> getPopularBookList(
-            @RequestParam(defaultValue = "DAILY") PeriodType period,
+            @RequestParam(defaultValue = "DAILY") PeriodType period,        // enum에 해당하는 값이 없으면 400 에러, MethodArgumentTypeMismatchException 발생
             @RequestParam(defaultValue = "ASC") Sort.Direction direction,
-            @RequestParam(required = false) String cursor,        // 점수 기준 커서
+            @RequestParam(required = false) String cursor,        // 랭크 기준 커서
             @RequestParam(required = false) Instant after,        // 보조커서
             @RequestParam(defaultValue = "50") Integer limit
     ) {

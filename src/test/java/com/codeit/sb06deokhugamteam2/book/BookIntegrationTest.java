@@ -11,16 +11,14 @@ import com.codeit.sb06deokhugamteam2.book.repository.BookRepository;
 import com.codeit.sb06deokhugamteam2.book.storage.S3Storage;
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import com.codeit.sb06deokhugamteam2.common.enums.RankingType;
-import com.codeit.sb06deokhugamteam2.dashboard.entity.DashBoard;
-import com.codeit.sb06deokhugamteam2.dashboard.repository.DashBoardRepository;
+import com.codeit.sb06deokhugamteam2.dashboard.entity.Dashboard;
+import com.codeit.sb06deokhugamteam2.dashboard.repository.DashboardRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hibernate.validator.constraints.ISBN;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -55,7 +53,7 @@ public class BookIntegrationTest {
     private BookRepository bookRepository;
 
     @Autowired
-    private DashBoardRepository dashBoardRepository;
+    private DashboardRepository dashBoardRepository;
 
     @MockitoBean
     private NaverSearchClient naverSearchClient;
@@ -217,7 +215,7 @@ public class BookIntegrationTest {
                     .build();
             UUID bookId = bookRepository.saveAndFlush(book).getId();
 
-            DashBoard dashBoard = DashBoard.builder()
+            Dashboard dashBoard = Dashboard.builder()
                     .entityId(bookId)
                     .rank((long) i)
                     .score(100 - i)
@@ -238,8 +236,11 @@ public class BookIntegrationTest {
         String responseBody = result.getResponse().getContentAsString();
         CursorPageResponsePopularBookDto cursorDto = objectMapper.readValue(responseBody, CursorPageResponsePopularBookDto.class);
 
-        assertThat(cursorDto.content()).hasSize(4+1);  // 서버에서 +1 조회한 건 hasNext 체크용
+        assertThat(cursorDto.size()).isEqualTo(4);
         assertThat(cursorDto.content().get(0).title()).isEqualTo("title1");
         assertThat(cursorDto.content().get(3).title()).isEqualTo("title4");
+        assertThat(cursorDto.hasNext()).isTrue();
+        assertThat(cursorDto.nextCursor()).isEqualTo("4");
+        assertThat(cursorDto.nextAfter()).isEqualTo(cursorDto.content().get(3).createdAt());
     }
 }
