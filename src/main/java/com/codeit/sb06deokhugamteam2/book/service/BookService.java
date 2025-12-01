@@ -50,6 +50,10 @@ public class BookService {
     private final NaverSearchClient naverSearchClient;
 
     public BookDto create(BookCreateRequest bookCreateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
+        if (bookRepository.existsByIsbn(bookCreateRequest.getIsbn())) {
+            throw new BookException(ErrorCode.DUPLICATE_BOOK, Map.of("isbn", bookCreateRequest.getIsbn()), HttpStatus.CONFLICT);
+        }
+
         Book book = Book.builder()
                 .isbn(bookCreateRequest.getIsbn())
                 .title(bookCreateRequest.getTitle())
@@ -133,6 +137,13 @@ public class BookService {
                 .build();
 
         return cursorPageResponseBookDto;
+    }
+
+    @Transactional(readOnly = true)
+    public BookDto findBookById(UUID bookId) {
+        Book findBook = bookRepository.findById(bookId).orElseThrow(() -> new BookException(ErrorCode.NO_ID_VARIABLE,
+                Map.of("bookId", bookId), HttpStatus.NOT_FOUND));
+        return bookMapper.toDto(findBook);
     }
 
     public CursorPageResponsePopularBookDto getPopularBooks(PeriodType period, String cursor, Instant after, Sort.Direction direction, Integer limit) {

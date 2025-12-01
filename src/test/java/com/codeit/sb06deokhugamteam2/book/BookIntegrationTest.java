@@ -275,4 +275,28 @@ public class BookIntegrationTest {
         assertThat(cursorDto.getTotalElements()).isEqualTo(5);
         assertThat(cursorDto.getContent().get(0).getTitle()).isGreaterThan(cursorDto.getContent().get(1).getTitle());
     }
+
+    @Test
+    @DisplayName("도서 상세 조회 API 통합 테스트")
+    void findBookById_Success() throws Exception {
+        Book book = BookFixture.createBook(1);
+        bookRepository.save(book);
+        UUID bookId = book.getId();
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/books/" + bookId))
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+        String responseBody = result.getResponse().getContentAsString();
+        BookDto bookDto = objectMapper.readValue(responseBody, BookDto.class);
+
+        assertThat(bookDto.getId()).isEqualTo(book.getId());
+        assertThat(bookDto.getTitle()).isEqualTo(book.getTitle());
+        assertThat(bookDto.getAuthor()).isEqualTo(book.getAuthor());
+        assertThat(bookDto.getIsbn()).isEqualTo(book.getIsbn());
+        assertThat(bookDto.getPublisher()).isEqualTo(book.getPublisher());
+        assertThat(bookDto.getPublishedDate()).isEqualTo(book.getPublishedDate());
+        assertThat(bookDto.getDescription()).isEqualTo(book.getDescription());
+        assertThat(bookDto.getThumbnailUrl()).isEqualTo(book.getThumbnailUrl());
+    }
 }

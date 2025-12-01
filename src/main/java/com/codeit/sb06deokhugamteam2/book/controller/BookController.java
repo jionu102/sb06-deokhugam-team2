@@ -72,6 +72,12 @@ public class BookController {
         return ResponseEntity.ok(cursorPageResponseBookDto);
     }
 
+    @GetMapping("/{bookId}")
+    public ResponseEntity<BookDto> findBookById(@PathVariable(value = "bookId") UUID bookId) {
+        BookDto bookDto = bookService.findBookById(bookId);
+        return ResponseEntity.ok(bookDto);
+    }
+
     @GetMapping("/popular")
     public ResponseEntity<CursorPageResponsePopularBookDto> getPopularBookList(
             @RequestParam(defaultValue = "DAILY") PeriodType period,        // enum에 해당하는 값이 없으면 400 에러, MethodArgumentTypeMismatchException 발생
