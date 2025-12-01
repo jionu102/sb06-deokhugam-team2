@@ -135,6 +135,13 @@ public class BookService {
         return cursorPageResponseBookDto;
     }
 
+    @Transactional(readOnly = true)
+    public BookDto findBookById(UUID bookId) {
+        Book findBook = bookRepository.findById(bookId).orElseThrow(() -> new BookException(ErrorCode.NO_ID_VARIABLE,
+                Map.of("bookId", bookId), HttpStatus.NOT_FOUND));
+        return bookMapper.toDto(findBook);
+    }
+
     public CursorPageResponsePopularBookDto getPopularBooks(PeriodType period, String cursor, Instant after, Sort.Direction direction, Integer limit) {
 
         List<Dashboard> bookDashboard = dashBoardRepository.findPopularBookListByCursor(RankingType.BOOK, period, cursor, after, direction, limit);
