@@ -71,14 +71,6 @@ public class User {
 //    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 //    private List<ReviewLike> reviewLikes = new ArrayList<>();
 
-    public User(String email, String nickname, String password) {
-        this.email = email;
-        this.nickname = nickname;
-        this.password = password;
-        this.createdAt = LocalDateTime.now();
-        this.deletedAt = null;  //논리삭제된 시간
-    }
-
     public void updateNickname(String nickname) {
         this.nickname = nickname;
     }

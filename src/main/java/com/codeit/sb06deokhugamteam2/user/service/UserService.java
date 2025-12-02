@@ -21,8 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 //import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.Collections;
 //import java.util.List;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -33,7 +35,7 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
-//    private final UserQueryRepository userQueryRepository;
+    //    private final UserQueryRepository userQueryRepository;
     private final UserMapper userMapper;
 //    private final ReviewService reviewService;
 //    private final CommentService commentService;
@@ -87,7 +89,7 @@ public class UserService {
                     Collections.emptyMap(), HttpStatus.NOT_FOUND);
         }
 
-        userRepository.deleteById(userId); // @SQLDelete가 적용되어 soft delete 실행
+        userRepository.deleteById(userId);
     }
 
     @Transactional
@@ -117,31 +119,32 @@ public class UserService {
         userRepository.hardDeleteUserById(userId);
     }
 
-//    // 논리 삭제 후 1일이 경과한 사용자, 물리삭제
-//    @Transactional
-//    public int batchHardDeleteOldSoftDeletedUsers(int hoursAgo) {
-//        LocalDateTime olderThan = LocalDateTime.now().minusHours(hoursAgo).withNano(0);
-//
-//        //물리 삭제 대상 사용자 ID 목록 조회 (QueryDSL)
-//        List<UUID> userIds = userQueryRepository.findSoftDeletedUsersForHardDelete(olderThan);
-//
-//        if (userIds.isEmpty()) {
-//            log.info("Batch Hard Delete: No users found soft-deleted older than {} hours.", hoursAgo);
-//            return 0;
-//        }
-//
-//        //일괄 물리 삭제 실행 (Hard Delete)
-//        for (UUID userId : userIds) {
-//
-//    //연관 데이터 삭제 (필수)
+    // 논리 삭제 후 1일이 경과한 사용자, 물리삭제
+    @Transactional
+    public int batchHardDeleteOldSoftDeletedUsers(double hoursAgo) {
+        long secondsAgo = (long) (hoursAgo * 3600.0);
+        LocalDateTime olderThan = LocalDateTime.now().minusSeconds(secondsAgo).withNano(0);
+
+        //물리 삭제 대상자 ID 목록 조회
+        List<UUID> userIds = userRepository.findHardDeleteCandidatesIgnoringRestriction(olderThan);
+
+        if (userIds.isEmpty()) {
+            log.info("Batch Hard Delete: No users found soft-deleted older than {} hours.", hoursAgo);
+            return 0;
+        }
+
+        //일괄 물리 삭제 실행 (Hard Delete)
+        for (UUID userId : userIds) {
+
+//      //연관 데이터 삭제 (필수)
 //      reviewService.deleteAllByUserId(userId);
 //      commentService.deleteAllByUserId(userId);
-//
-//            //물리 삭제 실행
-//            userRepository.hardDeleteUserById(userId);
-//        }
-//
-//        log.info("Batch Hard Delete: {} users successfully hard deleted.", userIds.size());
-//        return userIds.size();
-//    }
+
+            //물리 삭제 실행
+            userRepository.hardDeleteUserById(userId);
+        }
+
+        log.info("Batch Hard Delete: {} users successfully hard deleted.", userIds.size());
+        return userIds.size();
+    }
 }
