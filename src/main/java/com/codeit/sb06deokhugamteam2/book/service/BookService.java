@@ -210,7 +210,7 @@ public class BookService {
                 return matcher.group(0).replaceAll("-", "");
             } else {
                 throw new OcrException(ErrorCode.ISBN_NOT_FOUND,
-                        Map.of("detail: ", ErrorCode.ISBN_NOT_FOUND.getMessage(), "response text: ", parsedText),
+                        Map.of("detail", ErrorCode.ISBN_NOT_FOUND.getMessage(), "response text", parsedText),
                         HttpStatus.NOT_FOUND);
             }
 

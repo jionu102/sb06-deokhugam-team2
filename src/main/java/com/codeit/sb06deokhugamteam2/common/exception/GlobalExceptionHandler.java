@@ -47,6 +47,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(OcrException.class)
   public ResponseEntity<ErrorResponse> handleOcrException(OcrException ex) {
+    log.error("Ocr 에러", ex);
     ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
     return ResponseEntity.status(error.getStatus()).body(error);
   }
