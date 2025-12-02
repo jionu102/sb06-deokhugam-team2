@@ -140,7 +140,7 @@ public class ReviewJpaRepository implements ReviewRepository, QueryReviewPort {
                 limit,
                 requestUserId
         );
-        Long count = countAll(userId, bookId, keyword);
+        Long count = count(userId, bookId, keyword);
 
         List<ReviewDto> content = extractContent(reviews, limit);
         String nextCursor = extractNextCursor(reviews, limit, orderBy);
@@ -285,7 +285,7 @@ public class ReviewJpaRepository implements ReviewRepository, QueryReviewPort {
         return Boolean.FALSE;
     }
 
-    private Long countAll(String userId, String bookId, String keyword) {
+    private Long count(String userId, String bookId, String keyword) {
         Long count = select(review.count())
                 .from(review)
                 .where(
