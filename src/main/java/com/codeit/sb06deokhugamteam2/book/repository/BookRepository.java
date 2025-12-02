@@ -4,8 +4,6 @@ import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,8 +19,6 @@ public interface BookRepository extends JpaRepository<Book, UUID>, BookRepositor
     long countNotDeletedBooksByKeyword(String keyword);
 
     long countByDeletedFalse();
-
-    List<Book> findAllByCreatedAtAfter(Instant since);
 
     Optional<Book> findByIsbnAndDeletedFalse(String isbn);
 }

@@ -16,7 +16,9 @@ public enum ErrorCode {
     INVALID_DATA("해당 데이터가 없습니다."),
     AWS_EXCEPTION("AWS 작업 도중 오류가 발생했습니다."),
     NAVER_SEARCH_EXCEPTION("네이버 검색 요청에 실패했습니다."),
-    DUPLICATE_BOOK("중복된 도서입니다.");
+    DUPLICATE_BOOK("중복된 도서입니다."),
+    ISBN_NOT_FOUND("이미지에서 ISBN을 찾을 수 없습니다."),
+    OCR_API_ERROR("OCR API 요청에 실패했습니다.");
 
     private String message;
 

@@ -90,6 +90,14 @@ public class BookController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping(value = "/isbn/ocr", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> getIsbnByOcr(
+            @RequestParam MultipartFile image
+    ) {
+        String isbn = bookService.getIsbnByOcrApi(image);
+        return ResponseEntity.ok(isbn);
+    }
+
     @DeleteMapping("/{bookId}")
     public ResponseEntity<Void> deleteSoft(
             @PathVariable UUID bookId
