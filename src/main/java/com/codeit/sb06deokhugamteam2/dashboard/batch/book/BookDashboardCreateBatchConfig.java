@@ -75,6 +75,7 @@ public class BookDashboardCreateBatchConfig {
          1. 계산된 점수 기준 내림차순 정렬
          2. 점수가 같을 경우 도서의 생성일 기준 내림차순 정렬
          3. 정렬 순서대로 랭크 부여 예정
+         4. 현재 review의 createdAt은 반영하지 않음 (추후 반영 고려)
          */
         return new JpaPagingItemReaderBuilder<Book>()
                 .name("createRankingBooksItemReader")

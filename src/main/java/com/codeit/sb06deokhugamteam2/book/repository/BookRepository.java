@@ -17,6 +17,4 @@ public interface BookRepository extends JpaRepository<Book, UUID>, BookRepositor
         LOWER(b.author) LIKE LOWER(CONCAT('%', :keyword, '%'))
     """)
     long countByKeyword(String keyword);
-
-    List<Book> findAllByCreatedAtAfter(Instant since);
 }
