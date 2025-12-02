@@ -1,21 +1,21 @@
-package com.codeit.sb06deokhugamteam2;
+package com.codeit.sb06deokhugamteam2.notification;
 
-import static com.codeit.sb06deokhugamteam2.notification.entity.QNotification.notification;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.codeit.sb06deokhugamteam2.notification.NotificationComponent;
 import com.codeit.sb06deokhugamteam2.notification.entity.Notification;
+import com.codeit.sb06deokhugamteam2.notification.entity.dto.NotificaionCursorDto;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.NotificationDto;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.request.NotificationCreateRequest;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.request.NotificationUpdateRequest;
+import com.codeit.sb06deokhugamteam2.notification.entity.dto.response.NotificationCursorResponse;
 import com.codeit.sb06deokhugamteam2.notification.repository.NotificationRepository;
 import com.codeit.sb06deokhugamteam2.notification.service.NotificationService;
 import jakarta.transaction.Transactional;
-import java.lang.annotation.Documented;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,12 +58,21 @@ public class NotificationTest {
   @BeforeEach
   void setup() {
     notificationRepository.deleteAll();
-    NotificationCreateRequest request = new NotificationCreateRequest(UUID.randomUUID()
-        ,UUID.randomUUID()
-        ,"title"
-        ,"content");
 
-    preSetupData = notificationComponent.saveNotification(request);
+    UUID userId = UUID.randomUUID();
+    for(int i = 0; i < 100; i++) {
+      NotificationCreateRequest request = new NotificationCreateRequest(userId
+          ,UUID.randomUUID()
+          ,"title" + i
+          ,"content" + i);
+
+      preSetupData = notificationComponent.saveNotification(request);
+    }
+  }
+
+  @AfterEach
+  void cleanup() {
+    notificationRepository.deleteAll();
   }
 
   @Test
@@ -128,7 +137,6 @@ public class NotificationTest {
 
     Notification notification = notificationRepository.findByUserId(preSetupData.getUserId()).get().get(0);
     assertThat(notification).isNotNull();
-    assertThat(notification.getId()).isEqualTo(preSetupData.getId());
     assertThat(notification.getUserId()).isEqualTo(preSetupData.getUserId());
     assertThat(notification.getConfirmedAt()).isNotEqualTo(preSetupData.getCreatedAt());
   }
@@ -164,5 +172,25 @@ public class NotificationTest {
     List<Notification> result = notificationRepository.findByUserId(preSetupData.getUserId()).get();
 
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  @DisplayName("cursor 기반 가져오기 성공 테스트")
+  public void getAllByIdTest()
+  {
+    NotificaionCursorDto dto = NotificaionCursorDto.builder()
+        .userId(preSetupData.getUserId())
+        .direction("desc")
+        .cursor("")
+        .after(null)
+        .limit(20)
+        .build();
+
+    NotificationCursorResponse response = notificationService.getUserNotifications(dto);
+    assertThat(response).isNotNull();
+    assertThat(response.hasNext()).isTrue();
+    assertThat(response.nextCursor()).isNotEmpty();
+    assertThat(response.nextAfter()).isNotNull();
+    assertThat(response.size()).isEqualTo(20);
   }
 }

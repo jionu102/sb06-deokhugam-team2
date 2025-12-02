@@ -5,6 +5,7 @@ import com.codeit.sb06deokhugamteam2.common.exception.exceptions.MDCException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -13,26 +14,25 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-@Component
+//@Component
 @Slf4j
-public class LoggingIntercepter implements HandlerInterceptor {
+public class LoggingInterceptor implements HandlerInterceptor {
   @Override
-  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler){
-
+  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+      throws Exception {
+    UUID uuid = UUID.randomUUID();
     try {
-      UUID uuid = UUID.randomUUID();
-      MDC.put("ipAddress", request.getRemoteAddr());
+      MDC.put("ipAddress", Optional.ofNullable(request.getRemoteAddr()).orElse("-"));
       MDC.put("requestId", uuid.toString());
-      MDC.put("requestUrl", request.getRequestURL().toString());
+      MDC.put("requestUrl", Optional.ofNullable(request.getRequestURL()).map(StringBuffer::toString).orElse("-"));
       MDC.put("requestMethod", request.getMethod());
-
-      response.addHeader("Deokhugam-request-id", uuid.toString());
-
-      return HandlerInterceptor.super.preHandle(request, response, handler);
     } catch (Exception e) {
       throw new MDCException(ErrorCode.COMMON_EXCEPTION, Map.of("message", e.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+      response.addHeader("Deokhugam-request-id", uuid.toString());
+      return HandlerInterceptor.super.preHandle(request, response, handler);
   }
 
   @Override
@@ -44,9 +44,8 @@ public class LoggingIntercepter implements HandlerInterceptor {
   @Override
   public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
       Object handler, Exception ex) throws Exception {
-    HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
-
     MDC.clear();
+    HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
   }
 
 }
