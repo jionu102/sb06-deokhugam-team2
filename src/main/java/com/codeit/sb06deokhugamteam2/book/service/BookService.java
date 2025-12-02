@@ -149,8 +149,12 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public BookDto findBookById(UUID bookId) {
-        Book findBook = bookRepository.findById(bookId).orElseThrow(() -> new BookException(ErrorCode.NO_ID_VARIABLE,
-                Map.of("bookId", bookId), HttpStatus.NOT_FOUND));
+        Book findBook = bookRepository.findById(bookId).orElse(null);
+        if (findBook == null || findBook.isDeleted()) {
+            throw new BookException(ErrorCode.NO_ID_VARIABLE,
+                    Map.of("bookId", bookId), HttpStatus.NOT_FOUND);
+        }
+
         return bookMapper.toDto(findBook);
     }
 
