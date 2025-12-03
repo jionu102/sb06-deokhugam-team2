@@ -21,13 +21,7 @@ public interface BookRepository extends JpaRepository<Book, UUID>, BookRepositor
 
     Optional<Book> findByIsbn(String isbn);
 
-    // 논리삭제하면 영속성 컨텍스트에서 제거하기 위해 clearAutomatically = true 설정
-    // todo: soft delete 관련 테스트 코드 작성 필요
-    @Modifying(clearAutomatically = true)
-    @Query("Delete FROM Book b WHERE b.id = :bookId")
-    void deleteSoftById(UUID bookId);
-
     @Modifying
-    @Query(value = "DELETE FROM book WHERE id = :bookId AND deleted = true", nativeQuery = true)
+    @Query(value = "DELETE FROM books WHERE id = :bookId AND deleted = true", nativeQuery = true)
     void deleteHardById(UUID bookId);
 }
