@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.SoftDelete;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @Table(name = "books")
 @Getter
 @Builder
+@SoftDelete
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
@@ -72,10 +74,6 @@ public class Book {
     @Column(nullable = false, name = "updated_at")
     private Instant updatedAt;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean deleted = false;
-
     public void updateThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
     }
@@ -95,9 +93,5 @@ public class Book {
 
     public void plusRating(double rating) {
         this.ratingSum += rating;
-    }
-
-    public void setDeletedAsTrue() {
-        this.deleted = true;
     }
 }

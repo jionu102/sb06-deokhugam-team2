@@ -91,19 +91,17 @@ public class BookService {
     }
 
     public BookDto update(UUID bookId, BookUpdateRequest bookUpdateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
-        Book findBook = bookRepository.findById(bookId).orElseThrow(
-                () -> new BookException(ErrorCode.NO_ID_VARIABLE,
-                        Map.of("bookId", bookId),
-                        HttpStatus.NOT_FOUND
-                )
-        );
-        if (findBook.isDeleted()) {
+        Optional<Book> findBookOptional = bookRepository.findById(bookId);
+
+        if (findBookOptional.isEmpty()) {
             throw new BookException(
                     ErrorCode.NO_ID_VARIABLE,
                     Map.of("bookId", bookId),
                     HttpStatus.NOT_FOUND
             );
         }
+
+        Book findBook = findBookOptional.get();
 
         String thumbnailUrl = optionalBookImageCreateRequest.map(bookImageCreateRequest -> {
             if (findBook.getThumbnailUrl() != null) {
@@ -156,11 +154,13 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public BookDto findBookById(UUID bookId) {
-        Book findBook = bookRepository.findById(bookId).orElse(null);
-        if (findBook == null || findBook.isDeleted()) {
+        Optional<Book> findBookOptional = bookRepository.findById(bookId);
+        if (findBookOptional.isEmpty()) {
             throw new BookException(ErrorCode.NO_ID_VARIABLE,
                     Map.of("bookId", bookId), HttpStatus.NOT_FOUND);
         }
+
+        Book findBook = findBookOptional.get();
 
         return bookMapper.toDto(findBook);
     }
@@ -222,21 +222,12 @@ public class BookService {
     }
 
     public void deleteSoft(UUID bookId) {
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new EntityNotFoundException("도서를 찾을 수 없습니다: " + bookId));
-
-//        book.getReviews().forEach(review -> {
-//            review.deleted();
-//            review.getComments().forEach(Comment::softDelete);
-//        });
-
-        book.setDeletedAsTrue();
-        bookRepository.save(book);
+        bookRepository.deleteSoftById(bookId);
         log.info("도서 논리 삭제 완료: {}", bookId);
     }
 
     public void deleteHard(UUID bookId) {
-        bookRepository.deleteById(bookId);
+        bookRepository.deleteHardById(bookId);
         log.info("도서 물리 삭제 완료: {}", bookId);
     }
 
