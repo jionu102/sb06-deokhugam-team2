@@ -23,8 +23,8 @@ public class ReviewLike {
 
     @MapsId("reviewId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "review_id", nullable = false)
     @NotFound(action = NotFoundAction.IGNORE)
+    @JoinColumn(name = "review_id", nullable = false)
     private Review review;
 
     @NotNull

@@ -30,8 +30,7 @@ public class BookRepositoryCustomImpl implements BookRepositoryCustom {
         List<Book> books = queryFactory.selectFrom(book)
                 .where(keywordContains(keyword),
                         getCursorCondition(cursor, orderBy, direction),
-                        getNextAfterCondition(nextAfter, direction),
-                        book.deleted.isFalse())
+                        getNextAfterCondition(nextAfter, direction))
                 .orderBy(primarySort, secondarySort)
                 .limit(limit + 1)
                 .fetch();

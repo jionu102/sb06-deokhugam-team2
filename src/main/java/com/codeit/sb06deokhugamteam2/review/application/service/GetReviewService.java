@@ -1,31 +1,39 @@
 package com.codeit.sb06deokhugamteam2.review.application.service;
 
-import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewDetail;
-import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewSummary;
+import com.codeit.sb06deokhugamteam2.review.application.dto.CursorPageRequestReviewDto;
+import com.codeit.sb06deokhugamteam2.review.application.dto.CursorPageResponseReviewDto;
+import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewDto;
 import com.codeit.sb06deokhugamteam2.review.application.port.in.GetReviewQuery;
-import com.codeit.sb06deokhugamteam2.review.application.port.in.query.ReviewPaginationQuery;
-import com.codeit.sb06deokhugamteam2.review.application.port.in.query.ReviewQuery;
-import com.codeit.sb06deokhugamteam2.review.application.port.out.ReviewRepository;
+import com.codeit.sb06deokhugamteam2.review.application.port.out.QueryReviewPort;
+import com.codeit.sb06deokhugamteam2.review.domain.exception.ReviewNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
 public class GetReviewService implements GetReviewQuery {
 
-    private final ReviewRepository reviewRepository;
+    private final QueryReviewPort queryReviewPort;
 
-    public GetReviewService(ReviewRepository reviewRepository) {
-        this.reviewRepository = reviewRepository;
+    public GetReviewService(QueryReviewPort queryReviewPort) {
+        this.queryReviewPort = queryReviewPort;
     }
 
     @Override
-    public ReviewSummary readReviews(ReviewPaginationQuery query) {
-        return reviewRepository.findReviewSummary(query);
+    public CursorPageResponseReviewDto readReviews(CursorPageRequestReviewDto query, String header) {
+        UUID requestUserId = UUID.fromString(header);
+
+        return queryReviewPort.findAll(query, requestUserId);
     }
 
     @Override
-    public ReviewDetail readReview(ReviewQuery query) {
-        return reviewRepository.findReviewDetail(query);
+    public ReviewDto readReview(String path, String header) {
+        UUID reviewId = UUID.fromString(path);
+        UUID requestUserId = UUID.fromString(header);
+
+        return queryReviewPort.findById(reviewId, requestUserId)
+                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
     }
 }

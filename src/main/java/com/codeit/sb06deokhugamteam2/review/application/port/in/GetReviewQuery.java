@@ -1,13 +1,12 @@
 package com.codeit.sb06deokhugamteam2.review.application.port.in;
 
-import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewDetail;
-import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewSummary;
-import com.codeit.sb06deokhugamteam2.review.application.port.in.query.ReviewPaginationQuery;
-import com.codeit.sb06deokhugamteam2.review.application.port.in.query.ReviewQuery;
+import com.codeit.sb06deokhugamteam2.review.application.dto.CursorPageRequestReviewDto;
+import com.codeit.sb06deokhugamteam2.review.application.dto.CursorPageResponseReviewDto;
+import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewDto;
 
 public interface GetReviewQuery {
 
-    ReviewSummary readReviews(ReviewPaginationQuery query);
+    CursorPageResponseReviewDto readReviews(CursorPageRequestReviewDto query, String header);
 
-    ReviewDetail readReview(ReviewQuery query);
+    ReviewDto readReview(String path, String header);
 }

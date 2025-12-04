@@ -1,4 +1,4 @@
-package com.codeit.sb06deokhugamteam2.review.adapter.in.dto;
+package com.codeit.sb06deokhugamteam2.review.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

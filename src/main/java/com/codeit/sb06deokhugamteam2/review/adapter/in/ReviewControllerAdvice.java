@@ -45,8 +45,8 @@ public class ReviewControllerAdvice {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    @ExceptionHandler(DuplicateReviewException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateReviewException(DuplicateReviewException e) {
+    @ExceptionHandler(AlreadyExistsReviewException.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyExistsReviewException(AlreadyExistsReviewException e) {
         log.error(e.getMessage());
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(Instant.now())
@@ -85,5 +85,47 @@ public class ReviewControllerAdvice {
                 .status(HttpStatus.FORBIDDEN.value())
                 .build();
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+    
+    @ExceptionHandler(InvalidReviewRatingException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidReviewRatingException(InvalidReviewRatingException e) {
+        log.error(e.getMessage());
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .code("INVALID_REVIEW_RATING")
+                .message("리뷰 평점은 1에서 5 사이의 값이어야 합니다.")
+                .details(Collections.emptyMap())
+                .exceptionType(e.getClass().getSuperclass().getSimpleName())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+    
+    @ExceptionHandler(InvalidReviewContentException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidReviewContentException(InvalidReviewContentException e) {
+        log.error(e.getMessage());
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .code("INVALID_REVIEW_CONTENT")
+                .message("리뷰 내용은 공백일 수 없습니다.")
+                .details(Collections.emptyMap())
+                .exceptionType(e.getClass().getSuperclass().getSimpleName())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ReviewException.class)
+    public ResponseEntity<ErrorResponse> handleReviewException(ReviewException e) {
+        log.error(e.getMessage());
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .code("REVIEW_ERROR")
+                .message(e.getMessage())
+                .details(Collections.emptyMap())
+                .exceptionType(e.getClass().getSuperclass().getSimpleName())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

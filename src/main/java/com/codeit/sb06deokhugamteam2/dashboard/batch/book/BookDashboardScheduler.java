@@ -1,13 +1,18 @@
 package com.codeit.sb06deokhugamteam2.dashboard.batch.book;
 
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
+import com.codeit.sb06deokhugamteam2.common.exception.ErrorCode;
+import com.codeit.sb06deokhugamteam2.common.exception.exceptions.BookException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
@@ -27,7 +32,10 @@ public class BookDashboardScheduler {
 
             jobLauncher.run(createRankingBooksJob, params);
         } catch (Exception e) {
-            throw new RuntimeException();   // todo 예외처리
+            throw new BookException(
+                    ErrorCode.COMMON_EXCEPTION,
+                    Map.of("message", "Failed to run daily book ranking job"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -42,7 +50,10 @@ public class BookDashboardScheduler {
 
             jobLauncher.run(createRankingBooksJob, params);
         } catch (Exception e) {
-            throw new RuntimeException();
+            throw new BookException(
+                    ErrorCode.COMMON_EXCEPTION,
+                    Map.of("message", "Failed to run weekly book ranking job"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -57,7 +68,10 @@ public class BookDashboardScheduler {
 
             jobLauncher.run(createRankingBooksJob, params);
         } catch (Exception e) {
-            throw new RuntimeException();
+            throw new BookException(
+                    ErrorCode.COMMON_EXCEPTION,
+                    Map.of("message", "Failed to run monthly book ranking job"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -72,7 +86,10 @@ public class BookDashboardScheduler {
 
             jobLauncher.run(createRankingBooksJob, params);
         } catch (Exception e) {
-            throw new RuntimeException();
+            throw new BookException(
+                    ErrorCode.COMMON_EXCEPTION,
+                    Map.of("message", "Failed to run entire book ranking job"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

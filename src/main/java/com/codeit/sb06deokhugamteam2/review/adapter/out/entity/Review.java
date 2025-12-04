@@ -4,6 +4,8 @@ import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import com.codeit.sb06deokhugamteam2.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.SoftDelete;
 
 import java.time.Instant;
@@ -22,11 +24,13 @@ public class Review {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -35,7 +39,7 @@ public class Review {
     private Integer rating;
 
     @NotNull
-    @Column(name = "content", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "content", nullable = false, length = 500)
     private String content;
 
     @NotNull
@@ -46,7 +50,15 @@ public class Review {
     @Column(name = "comment_count", nullable = false)
     private Integer commentCount;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "review",
+            cascade = {
+                    CascadeType.PERSIST,
+                    CascadeType.MERGE
+            },
+            orphanRemoval = true
+    )
     private Set<ReviewLike> likes = new HashSet<>();
 
     @NotNull

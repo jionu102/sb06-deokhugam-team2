@@ -44,6 +44,13 @@ public class GlobalExceptionHandler {
       ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
       return ResponseEntity.status(error.getStatus()).body(error);
   }
+
+  @ExceptionHandler(OcrException.class)
+  public ResponseEntity<ErrorResponse> handleOcrException(OcrException ex) {
+    log.error("Ocr 에러", ex);
+    ErrorResponse error = createErrorResponse(ex, ex.getHttpStatus(), ex.getDetails());
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
 // </editor-fold>
 
   // <editor-fold desc="공통 예외처리 부분들">

@@ -1,7 +1,8 @@
 package com.codeit.sb06deokhugamteam2.review.application.port.in;
 
-import com.codeit.sb06deokhugamteam2.review.application.port.in.command.DeleteReviewCommand;
-
 public interface DeleteReviewUseCase {
-    void deleteReview(DeleteReviewCommand command);
+
+    void deleteReview(String path, String header);
+
+    void hardDeleteReview(String path, String header);
 }

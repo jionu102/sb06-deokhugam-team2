@@ -1,28 +1,35 @@
 package com.codeit.sb06deokhugamteam2.review.application.service;
 
 import com.codeit.sb06deokhugamteam2.review.application.port.in.DeleteReviewUseCase;
-import com.codeit.sb06deokhugamteam2.review.application.port.in.command.DeleteReviewCommand;
-import com.codeit.sb06deokhugamteam2.review.application.port.out.ReviewRepository;
-import com.codeit.sb06deokhugamteam2.review.domain.ReviewDomain;
-import com.codeit.sb06deokhugamteam2.review.domain.exception.ReviewNotFoundException;
+import com.codeit.sb06deokhugamteam2.review.domain.ReviewService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
+@Transactional
 public class DeleteReviewService implements DeleteReviewUseCase {
 
-    private final ReviewRepository reviewRepository;
+    private final ReviewService reviewService;
 
-    public DeleteReviewService(ReviewRepository reviewRepository) {
-        this.reviewRepository = reviewRepository;
+    public DeleteReviewService(ReviewService reviewService) {
+        this.reviewService = reviewService;
     }
 
     @Override
-    @Transactional
-    public void deleteReview(DeleteReviewCommand command) {
-        ReviewDomain review = reviewRepository.findById(command.reviewId())
-                .orElseThrow(() -> new ReviewNotFoundException(command.reviewId()));
-        review.requireOwner(command.requestUserId());
-        reviewRepository.delete(review);
+    public void deleteReview(String path, String header) {
+        UUID reviewId = UUID.fromString(path);
+        UUID requestUserId = UUID.fromString(header);
+
+        reviewService.hideReview(reviewId, requestUserId);
+    }
+
+    @Override
+    public void hardDeleteReview(String path, String header) {
+        UUID reviewId = UUID.fromString(path);
+        UUID requestUserId = UUID.fromString(header);
+
+        reviewService.deleteReview(reviewId, requestUserId);
     }
 }

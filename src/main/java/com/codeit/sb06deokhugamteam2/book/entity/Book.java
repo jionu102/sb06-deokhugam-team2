@@ -2,11 +2,9 @@ package com.codeit.sb06deokhugamteam2.book.entity;
 
 import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.Review;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.SoftDelete;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -22,6 +20,7 @@ import java.util.UUID;
 @Table(name = "books")
 @Getter
 @Builder
+@SoftDelete
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
@@ -51,13 +50,15 @@ public class Book {
     @Column(nullable = true, name = "thumbnail_url")
     private String thumbnailUrl;
 
+    @Setter
     @Builder.Default    // 빌더 사용 시 기본값 설정
     @Column(nullable = false, name = "review_count")
     private int reviewCount = 0;
 
+    @Setter
     @Builder.Default
     @Column(nullable = false, name = "rating_sum")
-    private double ratingSum = 0.0;
+    private int ratingSum = 0;
 
     @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -72,10 +73,6 @@ public class Book {
     @Column(nullable = false, name = "updated_at")
     private Instant updatedAt;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean deleted = false;
-
     public void updateThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
     }
@@ -87,17 +84,5 @@ public class Book {
         this.publisher = publisher;
         this.publishedDate = publishedDate;
         this.thumbnailUrl = thumbnailUrl;
-    }
-
-    public void incrementReviewCount() {
-        this.reviewCount = this.reviewCount + 1;
-    }
-
-    public void plusRating(double rating) {
-        this.ratingSum += rating;
-    }
-
-    public void setDeletedAsTrue() {
-        this.deleted = true;
     }
 }
