@@ -61,7 +61,12 @@ public class Book {
     private int ratingSum = 0;
 
     @Builder.Default
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "book",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     @BatchSize(size = 100)
     private List<Review> reviews = new ArrayList<>();
 

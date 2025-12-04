@@ -226,7 +226,7 @@ public class BookService {
     }
 
     public void deleteSoft(UUID bookId) {
-        bookRepository.deleteById(bookId);
+        bookRepository.deleteSoftById(bookId);
         log.info("도서 논리 삭제 완료: {}", bookId);
     }
 

@@ -1,6 +1,5 @@
 package com.codeit.sb06deokhugamteam2.book.repository;
 
-import com.codeit.sb06deokhugamteam2.book.client.NaverSearchClient;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import com.codeit.sb06deokhugamteam2.book.fixture.BookFixture;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -11,11 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 // @DataJpaTest가 h2 db로 자동대체하는 것을 막기위해 NONE 설정
 @DataJpaTest
@@ -42,35 +41,75 @@ class BookRepositoryTest {
     }
 
     @Test
-    @DisplayName("도서 softdelete, harddelete 동작 테스트")
-    void deleteBook_Success() {
+    @DisplayName("EntityManager REMOVE 호출 시 소프트 삭제 되는지 테스트")
+    void softDelete_Using_EntityManager_Remove() {
         //given
-        System.out.println("---BookRepositoryTest.deleteBook_Success 시작---");
-        System.out.println("Book1 생성 및 저장");
-        Book book1 = BookFixture.createBook(1);
-        Book savedBook1 = bookRepository.save(book1);
+        Book book = BookFixture.createBook(1);
+        Book savedBook = bookRepository.save(book);
         em.flush();
 
-        System.out.println("영속성 컨텍스트에서 삭제 테스트 시작");
-        em.remove(savedBook1);
+        // when
+        em.remove(savedBook);
         em.flush(); // Update 쿼리 발생 확인
+        em.clear();
 
-        System.out.println("Book2 생성 및 저장");
-        Book book2 = BookFixture.createBook(2);
-        Book savedBook2 = bookRepository.save(book2);
+        // then
+        assertThat(bookRepository.findById(savedBook.getId())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Repository DELETE 호출 시 소프트 삭제 되는지 테스트")
+    void softDelete_Using_Repository_Delete() {
+        //given
+        Book book = BookFixture.createBook(1);
+        Book savedBook = bookRepository.save(book);
         em.flush();
 
-        System.out.println("리포지토리에서 논리삭제 테스트 시작");
-        bookRepository.deleteById(savedBook2.getId());
+        // when
+        bookRepository.deleteById(savedBook.getId());
+        em.flush();
+        em.clear();
+
+        // then
+        assertThat(bookRepository.findById(savedBook.getId())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Native Query로 하드 삭제 되는지 테스트")
+    void deleteBook_By_EntityManage_Success() {
+        // given
+        Book book = BookFixture.createBook(1);
+        Book savedBook = bookRepository.save(book);
         em.flush();
 
-        System.out.println("Book3 생성 및 저장");
-        Book book3 = BookFixture.createBook(3);
-        Book savedBook3 = bookRepository.save(book3);
+        // when
+        // 논리삭제가 되어야 물리삭제 가능하도록 Native Query로 구현된 메서드 호출
+        bookRepository.deleteSoftById(savedBook.getId());
+        bookRepository.deleteHardById(savedBook.getId());
+        em.flush();
+        em.clear();
+
+        System.out.println(savedBook.getAuthor());
+
+        // then
+        assertThat(bookRepository.findById(savedBook.getId())).isEmpty();
+    }
+
+
+    @Test
+    @DisplayName("JPQL DELETE 쿼리가 UPDATE 쿼리로 변환되고 where deleted = false 조건이 붙어 소프트 삭제 되는지 테스트")
+    void softDelete_Using_JPQL_Delete_Query() {
+        //given
+        Book book = BookFixture.createBook(1);
+        Book savedBook = bookRepository.save(book);
         em.flush();
 
-        System.out.println("리포지토리에서 물리삭제 테스트 시작");
-        bookRepository.deleteHardById(savedBook3.getId());
+        // when
+        bookRepository.deleteSoftById(savedBook.getId());
         em.flush();
+        em.clear();
+
+        // then
+        assertThat(bookRepository.findById(savedBook.getId())).isEmpty();
     }
 }
