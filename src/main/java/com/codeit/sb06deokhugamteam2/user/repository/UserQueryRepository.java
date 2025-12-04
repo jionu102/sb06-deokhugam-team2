@@ -47,13 +47,12 @@ public class UserQueryRepository {
         //최종점수 calculatedScore는 실수형(Double)
         var calculatedScore = reviewScoreSum.doubleValue().multiply(0.5) // * 0.5(리뷰인기점수)
                 .add(likeCount.doubleValue().multiply(0.2)) // + 좋아요 수 * 0.2
-                .add(commentCount.doubleValue().multiply(0.3)) // + 댓글 수 * 0.3
-                .as("score");
+                .add(commentCount.doubleValue().multiply(0.3)); // + 댓글 수 * 0.3
 
         // 파워 유저 데이터 조회 및 집계
         List<PowerUserDto> content = queryFactory
                 .select(Projections.constructor(PowerUserDto.class,
-                        user.id.as("userId"),
+                        user.id,
                         user.nickname,
                         Expressions.constant(period.toString()),
                         user.createdAt,
