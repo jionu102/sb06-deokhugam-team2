@@ -3,7 +3,7 @@ package com.codeit.sb06deokhugamteam2.review.adapter.in;
 import com.codeit.sb06deokhugamteam2.review.application.dto.*;
 import com.codeit.sb06deokhugamteam2.review.application.port.in.CreateReviewUseCase;
 import com.codeit.sb06deokhugamteam2.review.application.port.in.DeleteReviewUseCase;
-import com.codeit.sb06deokhugamteam2.review.application.port.in.GetReviewQuery;
+import com.codeit.sb06deokhugamteam2.review.application.port.in.GetReviewUseCase;
 import com.codeit.sb06deokhugamteam2.review.application.port.in.UpdateReviewUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,18 +15,18 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController implements ReviewApi {
 
     private final CreateReviewUseCase createReviewUseCase;
-    private final GetReviewQuery getReviewQuery;
+    private final GetReviewUseCase getReviewUseCase;
     private final DeleteReviewUseCase deleteReviewUseCase;
     private final UpdateReviewUseCase updateReviewUseCase;
 
     public ReviewController(
             CreateReviewUseCase createReviewUseCase,
-            GetReviewQuery getReviewQuery,
+            GetReviewUseCase getReviewUseCase,
             DeleteReviewUseCase deleteReviewUseCase,
             UpdateReviewUseCase updateReviewUseCase
     ) {
         this.createReviewUseCase = createReviewUseCase;
-        this.getReviewQuery = getReviewQuery;
+        this.getReviewUseCase = getReviewUseCase;
         this.deleteReviewUseCase = deleteReviewUseCase;
         this.updateReviewUseCase = updateReviewUseCase;
     }
@@ -44,7 +44,7 @@ public class ReviewController implements ReviewApi {
             @ModelAttribute CursorPageRequestReviewDto query,
             @RequestHeader(value = "Deokhugam-Request-User-ID") String header
     ) {
-        CursorPageResponseReviewDto response = getReviewQuery.readReviews(query, header);
+        CursorPageResponseReviewDto response = getReviewUseCase.readReviews(query, header);
         return ResponseEntity.ok(response);
     }
 
@@ -54,7 +54,7 @@ public class ReviewController implements ReviewApi {
             @PathVariable(name = "reviewId") String path,
             @RequestHeader(value = "Deokhugam-Request-User-ID") String header
     ) {
-        ReviewDto response = getReviewQuery.readReview(path, header);
+        ReviewDto response = getReviewUseCase.readReview(path, header);
         return ResponseEntity.ok(response);
     }
 
@@ -64,7 +64,7 @@ public class ReviewController implements ReviewApi {
             @PathVariable(name = "reviewId") String path,
             @RequestHeader(value = "Deokhugam-Request-User-ID") String header
     ) {
-        deleteReviewUseCase.deleteReview(path, header);
+        deleteReviewUseCase.hideReview(path, header);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 
@@ -74,7 +74,7 @@ public class ReviewController implements ReviewApi {
             @PathVariable(name = "reviewId") String path,
             @RequestHeader(value = "Deokhugam-Request-User-ID") String header
     ) {
-        deleteReviewUseCase.hardDeleteReview(path, header);
+        deleteReviewUseCase.deleteReview(path, header);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
     }
 

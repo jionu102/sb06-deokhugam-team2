@@ -4,7 +4,7 @@ import com.codeit.sb06deokhugamteam2.review.application.dto.CursorPageRequestRev
 import com.codeit.sb06deokhugamteam2.review.application.dto.CursorPageResponseReviewDto;
 import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewDto;
 
-public interface GetReviewQuery {
+public interface GetReviewUseCase {
 
     CursorPageResponseReviewDto readReviews(CursorPageRequestReviewDto query, String header);
 

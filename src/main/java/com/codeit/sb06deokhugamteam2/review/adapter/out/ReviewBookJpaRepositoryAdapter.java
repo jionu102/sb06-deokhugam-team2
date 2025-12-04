@@ -1,8 +1,8 @@
 package com.codeit.sb06deokhugamteam2.review.adapter.out;
 
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
+import com.codeit.sb06deokhugamteam2.review.application.port.out.ReviewBookRepositoryPort;
 import com.codeit.sb06deokhugamteam2.review.domain.ReviewBookDomain;
-import com.codeit.sb06deokhugamteam2.review.domain.port.ReviewBookRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Component;
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Component
 @Transactional(readOnly = true)
-public class ReviewBookJpaRepository implements ReviewBookRepository {
+public class ReviewBookJpaRepositoryAdapter implements ReviewBookRepositoryPort {
 
     @PersistenceContext
     private EntityManager em;

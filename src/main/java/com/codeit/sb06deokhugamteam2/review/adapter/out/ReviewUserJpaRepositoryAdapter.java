@@ -1,6 +1,6 @@
 package com.codeit.sb06deokhugamteam2.review.adapter.out;
 
-import com.codeit.sb06deokhugamteam2.review.domain.port.ReviewUserRepository;
+import com.codeit.sb06deokhugamteam2.review.application.port.out.ReviewUserRepositoryPort;
 import com.codeit.sb06deokhugamteam2.user.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Component
 @Transactional(readOnly = true)
-public class ReviewUserJpaRepository implements ReviewUserRepository {
+public class ReviewUserJpaRepositoryAdapter implements ReviewUserRepositoryPort {
 
     @PersistenceContext
     private EntityManager em;
