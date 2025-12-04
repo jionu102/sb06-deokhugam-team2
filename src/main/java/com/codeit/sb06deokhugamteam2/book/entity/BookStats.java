@@ -15,6 +15,7 @@ public class BookStats {
     @Id
     private UUID bookId;
 
+    @Setter
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "book_id")

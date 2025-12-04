@@ -51,6 +51,7 @@ public class Book {
     private String thumbnailUrl;
 
     @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Setter
     private BookStats bookStats;
 
     @Builder.Default
