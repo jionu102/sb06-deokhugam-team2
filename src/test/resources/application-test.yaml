@@ -14,3 +14,15 @@ spring:
   sql:
     init:
       mode: never
+
+  cloud:
+    aws:
+      s3:
+        bucket: ${AWS_S3_BUCKET:111}
+
+  naver:
+    client-id: ${NAVER_CLIENT_ID:111}
+    client-secret: ${NAVER_CLIENT_SECRET:111}
+
+  ocr:
+    api-key: ${OCR_API_KEY:111}

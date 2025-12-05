@@ -1,26 +1,29 @@
 package com.codeit.sb06deokhugamteam2.user.entity;
 
-//import com.codeit.sb06deokhugamteam2.comment.entity.Comment;
-//import com.codeit.sb06deokhugamteam2.review.infra.persistence.entity.Review;
-//import com.codeit.sb06deokhugamteam2.review.infra.persistence.entity.ReviewLike;
+
+import com.codeit.sb06deokhugamteam2.comment.entity.Comment;
+import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.Review;
+import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.ReviewLike;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-//import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-//import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
-//import java.util.ArrayList;
-//import java.util.List;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -31,11 +34,13 @@ import java.util.UUID;
         SET deleted_at = current_timestamp()
         WHERE id = ?
         """)
+//물리삭제 대상을 찾을때 null조건을 강제로 설정해줘서 못찾음,하지만 논리삭제 조회방지용으로 필요
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"reviews", "comments", "reviewLikes"})
 public class User {
 
     @Id
@@ -52,24 +57,24 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Builder.Default
+    @CreationTimestamp  // JPA 생명주기 활용
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "deleted_at") // 논리 삭제된 시간 필드 추가
     private LocalDateTime deletedAt;
 
-//    @Builder.Default
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-//    private List<Review> reviews = new ArrayList<>();
-//
-//    @Builder.Default
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-//    private List<Comment> comments = new ArrayList<>();
-//
-//    @Builder.Default
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-//    private List<ReviewLike> reviewLikes = new ArrayList<>();
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewLike> reviewLikes = new ArrayList<>();
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;

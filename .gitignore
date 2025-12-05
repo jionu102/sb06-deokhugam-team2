@@ -8,8 +8,6 @@ build/
 #환경 변수
 .env
 
-#static resource
-/src/main/resources/static
 
 #로그
 .logs/*

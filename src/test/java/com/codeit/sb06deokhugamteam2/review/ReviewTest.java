@@ -1,7 +1,7 @@
 package com.codeit.sb06deokhugamteam2.review;
 
-import com.codeit.sb06deokhugamteam2.review.adapter.in.dto.ReviewCreateRequest;
 import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.Review;
+import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewCreateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

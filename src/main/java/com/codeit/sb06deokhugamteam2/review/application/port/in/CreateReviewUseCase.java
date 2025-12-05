@@ -1,9 +1,9 @@
 package com.codeit.sb06deokhugamteam2.review.application.port.in;
 
-import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewDetail;
-import com.codeit.sb06deokhugamteam2.review.application.port.in.command.CreateReviewCommand;
+import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewCreateRequest;
+import com.codeit.sb06deokhugamteam2.review.application.dto.ReviewDto;
 
 public interface CreateReviewUseCase {
 
-    ReviewDetail createReview(CreateReviewCommand request);
+    ReviewDto createReview(ReviewCreateRequest requestBody);
 }

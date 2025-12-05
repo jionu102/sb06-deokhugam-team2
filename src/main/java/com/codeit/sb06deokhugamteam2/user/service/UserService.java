@@ -1,29 +1,28 @@
 package com.codeit.sb06deokhugamteam2.user.service;
 
+import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
+import com.codeit.sb06deokhugamteam2.common.enums.RankingType;
 import com.codeit.sb06deokhugamteam2.common.exception.ErrorCode;
 import com.codeit.sb06deokhugamteam2.common.exception.exceptions.BasicException;
-//import com.codeit.sb06deokhugamteam2.review.application.ReviewService;
-//import com.codeit.sb06deokhugamteam2.user.dto.CursorPageResponse;
-//import com.codeit.sb06deokhugamteam2.user.dto.PowerUserDto;
+import com.codeit.sb06deokhugamteam2.user.dto.CursorPageResponse;
+import com.codeit.sb06deokhugamteam2.user.dto.PowerUserDto;
 import com.codeit.sb06deokhugamteam2.user.dto.UserDto;
 import com.codeit.sb06deokhugamteam2.user.dto.UserLoginRequest;
 import com.codeit.sb06deokhugamteam2.user.dto.UserRegisterRequest;
 import com.codeit.sb06deokhugamteam2.user.dto.UserUpdateRequest;
 import com.codeit.sb06deokhugamteam2.user.entity.User;
 import com.codeit.sb06deokhugamteam2.user.mapper.UserMapper;
-//import com.codeit.sb06deokhugamteam2.user.repository.UserQueryRepository;
+import com.codeit.sb06deokhugamteam2.user.repository.UserQueryRepository;
 import com.codeit.sb06deokhugamteam2.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-//import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-//import java.time.LocalDateTime;
 import java.time.LocalDateTime;
 import java.util.Collections;
-//import java.util.List;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,7 +34,7 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
-    //    private final UserQueryRepository userQueryRepository;
+    private final UserQueryRepository userQueryRepository;
     private final UserMapper userMapper;
 //    private final ReviewService reviewService;
 //    private final CommentService commentService;
@@ -102,13 +101,13 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
-//    public CursorPageResponse<PowerUserDto> getPowerUsers(
-//            String period, String direction, String cursor, LocalDateTime after, int limit) {
-//
-//        PageRequest pageable = PageRequest.of(0, limit);
-//        String afterString = (after != null) ? after.toString() : null;
-//        return userQueryRepository.findPowerUsers(period, direction, cursor, afterString, pageable);
-//    }
+    public CursorPageResponse<PowerUserDto> getPowerUsers(
+            PeriodType period, RankingType rankingType, String direction, String cursor, LocalDateTime after, int limit) {
+
+        PageRequest pageable = PageRequest.of(0, limit);
+        String afterString = (after != null) ? after.toString() : null;
+        return userQueryRepository.findPowerUsers(period, direction, cursor, afterString, pageable);
+    }
 
     @Transactional
     public void hardDeleteUser(UUID userId) {
@@ -137,7 +136,7 @@ public class UserService {
         for (UUID userId : userIds) {
 
 //      //연관 데이터 삭제 (필수)
-//      reviewService.deleteAllByUserId(userId);
+//      deleteReviewService.deleteAllByUserId(userId);
 //      commentService.deleteAllByUserId(userId);
 
             //물리 삭제 실행

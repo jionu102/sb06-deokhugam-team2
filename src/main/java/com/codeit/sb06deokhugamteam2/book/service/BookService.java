@@ -10,6 +10,7 @@ import com.codeit.sb06deokhugamteam2.book.dto.response.CursorPageResponseBookDto
 import com.codeit.sb06deokhugamteam2.book.dto.response.CursorPageResponsePopularBookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
+import com.codeit.sb06deokhugamteam2.book.entity.BookStats;
 import com.codeit.sb06deokhugamteam2.book.mapper.BookCursorMapper;
 import com.codeit.sb06deokhugamteam2.book.mapper.BookMapper;
 import com.codeit.sb06deokhugamteam2.book.repository.BookRepository;
@@ -23,8 +24,6 @@ import com.codeit.sb06deokhugamteam2.dashboard.entity.Dashboard;
 import com.codeit.sb06deokhugamteam2.dashboard.repository.DashboardRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -49,18 +48,18 @@ import java.util.regex.Pattern;
 public class BookService {
 
     private final BookRepository bookRepository;
-    private final DashboardRepository dashBoardRepository;
+    private final DashboardRepository dashboardRepository;
     private final S3Storage s3Storage;
     private final BookMapper bookMapper;
     private final BookCursorMapper bookCursorMapper;
-    private final ObjectReader objectReader;
+    private final ObjectMapper objectMapper;
     private final NaverSearchClient naverSearchClient;
 
     @Value("${spring.ocr.api-key}")
     private String ocrApiKey;
 
     public BookDto create(BookCreateRequest bookCreateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
-        if (bookRepository.findByIsbnAndDeletedFalse(bookCreateRequest.getIsbn()).isPresent()) {
+        if (bookRepository.findByIsbn(bookCreateRequest.getIsbn()).isPresent()) {
             throw new BookException(ErrorCode.DUPLICATE_BOOK, Map.of("isbn", bookCreateRequest.getIsbn()), HttpStatus.CONFLICT);
         }
 
@@ -73,7 +72,12 @@ public class BookService {
                 .publishedDate(bookCreateRequest.getPublishedDate())
                 .build();
 
+        BookStats bookStats = new BookStats();
+        bookStats.setBook(book);
+        book.setBookStats(bookStats);
         Book savedBook = bookRepository.save(book);
+
+
         String thumbnailUrl = optionalBookImageCreateRequest.map(bookImageCreateRequest -> {
                     String key = savedBook.getId().toString() + "-" + bookImageCreateRequest.getOriginalFilename();
                     s3Storage.putThumbnail(key, bookImageCreateRequest.getBytes(), bookImageCreateRequest.getContentType());
@@ -92,19 +96,11 @@ public class BookService {
     }
 
     public BookDto update(UUID bookId, BookUpdateRequest bookUpdateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
-        Book findBook = bookRepository.findById(bookId).orElseThrow(
-                () -> new BookException(ErrorCode.NO_ID_VARIABLE,
+        Book findBook = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookException(
+                        ErrorCode.NO_ID_VARIABLE,
                         Map.of("bookId", bookId),
-                        HttpStatus.NOT_FOUND
-                )
-        );
-        if (findBook.isDeleted()) {
-            throw new BookException(
-                    ErrorCode.NO_ID_VARIABLE,
-                    Map.of("bookId", bookId),
-                    HttpStatus.NOT_FOUND
-            );
-        }
+                        HttpStatus.NOT_FOUND));
 
         String thumbnailUrl = optionalBookImageCreateRequest.map(bookImageCreateRequest -> {
             if (findBook.getThumbnailUrl() != null) {
@@ -138,7 +134,7 @@ public class BookService {
     public CursorPageResponseBookDto findBooks(String keyword, String orderBy,
                                                String direction, String cursor, Instant nextAfter, int limit) {
         long totalElements =
-                keyword == null ? bookRepository.countByDeletedFalse() : bookRepository.countNotDeletedBooksByKeyword(keyword);
+                keyword == null ? bookRepository.count() : bookRepository.countBooksByKeyword(keyword);
 
         Slice<Book> bookSlice = bookRepository.findBooks(keyword, orderBy, direction, cursor, nextAfter, limit);
         Slice<BookDto> bookDtoSlice = bookSlice.map(bookMapper::toDto);
@@ -157,26 +153,33 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public BookDto findBookById(UUID bookId) {
-        Book findBook = bookRepository.findById(bookId).orElse(null);
-        if (findBook == null || findBook.isDeleted()) {
+        Optional<Book> findBookOptional = bookRepository.findById(bookId);
+        if (findBookOptional.isEmpty()) {
             throw new BookException(ErrorCode.NO_ID_VARIABLE,
                     Map.of("bookId", bookId), HttpStatus.NOT_FOUND);
         }
+
+        Book findBook = findBookOptional.get();
 
         return bookMapper.toDto(findBook);
     }
 
     public CursorPageResponsePopularBookDto getPopularBooks(PeriodType period, String cursor, Instant after, Sort.Direction direction, Integer limit) {
 
-        List<Dashboard> bookDashboard = dashBoardRepository.findPopularBookListByCursor(RankingType.BOOK, period, cursor, after, direction, limit);
+        List<Dashboard> bookDashboard = dashboardRepository.findPopularBookListByCursor(RankingType.BOOK, period, cursor, after, direction, limit);
 
         List<PopularBookDto> popularBookDtoList = new ArrayList<>();
 
         bookDashboard.forEach(dashboard -> {
             Book book = bookRepository.findById(dashboard.getEntityId())
-                    .orElseThrow(() -> new EntityNotFoundException("도서를 찾을 수 없습니다: " + dashboard.getEntityId()));
+                    .orElseThrow(() -> new BookException(
+                            ErrorCode.NO_ID_VARIABLE,
+                            Map.of("bookId", dashboard.getEntityId()),
+                            HttpStatus.NOT_FOUND)
+                    );
+            BookStats bookStats = book.getBookStats();
             popularBookDtoList.add(
-                    bookMapper.toDto(dashboard, book, period)
+                    bookMapper.toDto(dashboard, book, bookStats, period)
             );
         });
 
@@ -196,7 +199,7 @@ public class BookService {
 
             String json = callOcrApi(image);
 
-            JsonNode root = objectReader.readTree(json);
+            JsonNode root = objectMapper.readTree(json);
 
             String parsedText = root
                     .get("ParsedResults")
@@ -223,21 +226,12 @@ public class BookService {
     }
 
     public void deleteSoft(UUID bookId) {
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new EntityNotFoundException("도서를 찾을 수 없습니다: " + bookId));
-
-//        book.getReviews().forEach(review -> {
-//            review.deleted();
-//            review.getComments().forEach(Comment::softDelete);
-//        });
-
-        book.setDeletedAsTrue();
-        bookRepository.save(book);
+        bookRepository.deleteSoftById(bookId);
         log.info("도서 논리 삭제 완료: {}", bookId);
     }
 
     public void deleteHard(UUID bookId) {
-        bookRepository.deleteById(bookId);
+        bookRepository.deleteHardById(bookId);
         log.info("도서 물리 삭제 완료: {}", bookId);
     }
 

@@ -2,6 +2,7 @@ package com.codeit.sb06deokhugamteam2.book.repository;
 
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
@@ -11,14 +12,21 @@ public interface BookRepository extends JpaRepository<Book, UUID>, BookRepositor
     @Query("""
                 SELECT COUNT(*)
                 FROM Book b
-                WHERE (LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                LOWER(b.isbn) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                LOWER(b.author) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND
-                b.deleted = false
+                WHERE
+                    (LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                    LOWER(b.isbn) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                    LOWER(b.author) LIKE LOWER(CONCAT('%', :keyword, '%')))
             """)
-    long countNotDeletedBooksByKeyword(String keyword);
+    long countBooksByKeyword(String keyword);
 
-    long countByDeletedFalse();
+    Optional<Book> findByIsbn(String isbn);
 
-    Optional<Book> findByIsbnAndDeletedFalse(String isbn);
+    // @SoftDelete
+    @Modifying
+    @Query("DELETE FROM Book b WHERE b.id = :bookId")
+    void deleteSoftById(UUID bookId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM books WHERE id = :bookId AND deleted = true", nativeQuery = true)
+    void deleteHardById(UUID bookId);
 }

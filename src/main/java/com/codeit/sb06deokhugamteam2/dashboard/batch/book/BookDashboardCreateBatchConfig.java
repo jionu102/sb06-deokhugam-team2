@@ -1,6 +1,7 @@
 package com.codeit.sb06deokhugamteam2.dashboard.batch.book;
 
 
+import com.codeit.sb06deokhugamteam2.book.dto.data.BookScoreDto;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import com.codeit.sb06deokhugamteam2.common.enums.RankingType;
@@ -15,17 +16,24 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JpaPagingItemReader;
+import org.springframework.batch.item.database.JdbcCursorItemReader;
+import org.springframework.batch.item.database.JpaItemWriter;
+import org.springframework.batch.item.database.PagingQueryProvider;
+import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import javax.sql.DataSource;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Configuration
@@ -35,7 +43,7 @@ public class BookDashboardCreateBatchConfig {
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
     private final EntityManagerFactory entityManagerFactory;
-    private final DashboardRepository dashboardRepository;
+    private final DataSource dataSource;
 
 
 
@@ -49,7 +57,7 @@ public class BookDashboardCreateBatchConfig {
     @Bean
     public Step createDailyRankingBooksStep() {
         return new StepBuilder("createDailyRankingBooksStep", jobRepository)
-                .<Book, Dashboard>chunk(100, transactionManager)
+                .<BookScoreDto, Dashboard>chunk(100, transactionManager)
                 .reader(createRankingBooksItemReader(null))
                 .processor(createRankingBooksItemProcessor(null))
                 .writer(createRankingBooksWriter())
@@ -58,7 +66,7 @@ public class BookDashboardCreateBatchConfig {
 
     @Bean
     @StepScope
-    public JpaPagingItemReader<Book> createRankingBooksItemReader(
+    public JdbcCursorItemReader<BookScoreDto> createRankingBooksItemReader(
             @Value("#{jobParameters['periodType']}") PeriodType periodType
     ) {
 
@@ -74,26 +82,50 @@ public class BookDashboardCreateBatchConfig {
         /*
          1. 계산된 점수 기준 내림차순 정렬
          2. 점수가 같을 경우 도서의 생성일 기준 내림차순 정렬
-         3. 정렬 순서대로 랭크 부여 예정
-         4. 현재 review의 createdAt은 반영하지 않음 (추후 반영 고려)
+         3. since 가 null 이면 전체 기간, 아니면 해당 기간 내의 리뷰만 집계
          */
-        return new JpaPagingItemReaderBuilder<Book>()
+        String nativeQuery =
+                "SELECT b.id, b.created_at, COUNT(r.book_id) AS review_count, SUM(r.rating) AS rating_sum, " +
+                        "       (COUNT(r.book_id) * 0.4 + SUM(r.rating) / COUNT(r.book_id) * 0.6) AS score " +
+                        "FROM books as b " +
+                        "LEFT JOIN review as r ON b.id = r.book_id " +
+                        "AND ( ? IS NULL OR r.created_at >= ? ) " +
+                        "GROUP BY b.id, b.created_at " +
+                        "HAVING COUNT(r.book_id) > 0 " +
+                        "ORDER BY score DESC, b.created_at DESC";
+
+        final Instant finalSince = since;
+
+        return new JdbcCursorItemReaderBuilder<BookScoreDto>()
                 .name("createRankingBooksItemReader")
-                .entityManagerFactory(entityManagerFactory)
-                .queryString(
-                        " SELECT b " +
-                                " FROM Book b " +
-                                " WHERE b.reviewCount > 0 " +
-                                " AND (:since IS NULL OR b.createdAt >= :since) " +
-                                " ORDER BY (b.reviewCount * 0.4 + b.ratingSum / b.reviewCount * 0.6) DESC, b.createdAt DESC ")
-                .parameterValues(Map.of("since", since))
-                .pageSize(100)
+                .dataSource(dataSource)
+                .sql(nativeQuery)
+                .preparedStatementSetter(ps -> {
+                    if (finalSince != null) {
+                        ps.setTimestamp(1, Timestamp.from(finalSince));
+                        ps.setTimestamp(2, Timestamp.from(finalSince));
+                    } else {
+                        ps.setNull(1, Types.TIMESTAMP);
+                        ps.setNull(2, Types.TIMESTAMP);
+                    }
+                })
+                .rowMapper((rs, rowNum) -> {
+                    UUID id = UUID.fromString(rs.getString("id"));
+                    long reviewCount = rs.getLong("review_count");
+                    double rating = rs.getDouble("rating_sum") / reviewCount;
+                    return BookScoreDto.builder()
+                            .id(id)
+                            .createdAt(rs.getTimestamp("created_at").toInstant())
+                            .periodReviewCount(reviewCount)
+                            .periodRating(rating)
+                            .build();
+                })
                 .build();
     }
 
     @Bean
     @StepScope
-    public ItemProcessor<Book, Dashboard> createRankingBooksItemProcessor(
+    public ItemProcessor<BookScoreDto, Dashboard> createRankingBooksItemProcessor(
             @Value("#{jobParameters['periodType']}") PeriodType periodType
     ) {
         /*
@@ -101,9 +133,9 @@ public class BookDashboardCreateBatchConfig {
          2. 1등이 제일 먼저 만들어져야 함 (보조커서 after 처리를 위해)
          */
         AtomicLong rank = new AtomicLong(1L);
-        return book ->
+        return bookScoreDto ->
                 Dashboard.builder()
-                        .entityId(book.getId())
+                        .entityId(bookScoreDto.id())
                         .rankingType(RankingType.BOOK)
                         .periodType(periodType)
                         .rank(rank.getAndIncrement())
@@ -111,7 +143,10 @@ public class BookDashboardCreateBatchConfig {
     }
 
     @Bean
-    public ItemWriter<Dashboard> createRankingBooksWriter() {
-        return dashboards -> dashboardRepository.saveAll(dashboards);
+    public JpaItemWriter<Dashboard> createRankingBooksWriter() {
+        // 영속성 컨텍스트에 있는 엔티티들을 데이터베이스에 저장
+        return new JpaItemWriterBuilder<Dashboard>()
+                .entityManagerFactory(entityManagerFactory)
+                .build();
     }
 }

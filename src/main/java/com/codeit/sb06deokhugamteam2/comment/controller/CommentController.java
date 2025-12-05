@@ -3,6 +3,7 @@ package com.codeit.sb06deokhugamteam2.comment.controller;
 import com.codeit.sb06deokhugamteam2.comment.dto.CommentCreateRequest;
 import com.codeit.sb06deokhugamteam2.comment.dto.CommentDto;
 import com.codeit.sb06deokhugamteam2.comment.dto.CommentUpdateRequest;
+import com.codeit.sb06deokhugamteam2.comment.dto.CursorPageResponseCommentDto;
 import com.codeit.sb06deokhugamteam2.comment.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,21 @@ public class CommentController {
         log.info("readComment commentID={}",commentId);
 
         CommentDto response = commentService.readComment(commentId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<CursorPageResponseCommentDto> readAllComments(
+            @RequestParam("reviewId") String reviewId,
+            @RequestParam(value = "direction", defaultValue = "DESC")  String direction,
+            @RequestParam(value = "cursor", required = false) String cursor,
+            @RequestParam(value = "after", required = false) String after,
+            @RequestParam(value = "size", required = false, defaultValue = "50") int size
+    ) {
+
+        CursorPageResponseCommentDto response =
+                commentService.readComments(reviewId, direction, cursor, after, size);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

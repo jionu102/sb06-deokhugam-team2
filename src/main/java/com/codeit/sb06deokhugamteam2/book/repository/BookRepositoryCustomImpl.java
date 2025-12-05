@@ -2,6 +2,7 @@ package com.codeit.sb06deokhugamteam2.book.repository;
 
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import com.codeit.sb06deokhugamteam2.book.entity.QBook;
+import com.codeit.sb06deokhugamteam2.book.entity.QBookStats;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -20,6 +21,7 @@ import java.util.List;
 public class BookRepositoryCustomImpl implements BookRepositoryCustom {
     private final JPAQueryFactory queryFactory;
     private final QBook book = QBook.book;
+    private final QBookStats bookStats = QBookStats.bookStats;
 
     @Override
     public Slice<Book> findBooks(String keyword, String orderBy, String direction, String cursor, Instant nextAfter, int limit) {
@@ -28,10 +30,10 @@ public class BookRepositoryCustomImpl implements BookRepositoryCustom {
                 direction.equalsIgnoreCase("ASC") ? book.createdAt.asc() : book.createdAt.desc();
 
         List<Book> books = queryFactory.selectFrom(book)
+                .innerJoin(book.bookStats, bookStats).fetchJoin()
                 .where(keywordContains(keyword),
                         getCursorCondition(cursor, orderBy, direction),
-                        getNextAfterCondition(nextAfter, direction),
-                        book.deleted.isFalse())
+                        getNextAfterCondition(nextAfter, direction))
                 .orderBy(primarySort, secondarySort)
                 .limit(limit + 1)
                 .fetch();
@@ -59,14 +61,14 @@ public class BookRepositoryCustomImpl implements BookRepositoryCustom {
             case "publishedDate" ->
                     direction.equalsIgnoreCase("ASC") ? book.publishedDate.asc() : book.publishedDate.desc();
             case "rating" -> {
-                NumberExpression<Double> ratingSum = book.ratingSum.castToNum(Double.class);
+                NumberExpression<Double> ratingSum = bookStats.ratingSum.castToNum(Double.class);
                 NumberExpression<Double> rating = new CaseBuilder()
-                        .when(ratingSum.loe(0.0).or(book.reviewCount.loe(0)))
+                        .when(ratingSum.loe(0.0).or(bookStats.reviewCount.loe(0)))
                         .then(0.0)
-                        .otherwise(ratingSum.divide(book.reviewCount));
+                        .otherwise(ratingSum.divide(bookStats.reviewCount));
                 yield direction.equalsIgnoreCase("ASC") ? rating.asc() : rating.desc();
             }
-            case "reviewCount" -> direction.equalsIgnoreCase("ASC") ? book.reviewCount.asc() : book.reviewCount.desc();
+            case "reviewCount" -> direction.equalsIgnoreCase("ASC") ? bookStats.reviewCount.asc() : bookStats.reviewCount.desc();
             default -> direction.equalsIgnoreCase("ASC") ? book.title.asc() : book.title.desc();
         };
     }
@@ -78,17 +80,17 @@ public class BookRepositoryCustomImpl implements BookRepositoryCustom {
 
         return switch (orderBy) {
             case "rating" -> {
-                NumberExpression<Double> ratingSum = book.ratingSum.castToNum(Double.class);
+                NumberExpression<Double> ratingSum = bookStats.ratingSum.castToNum(Double.class);
                 NumberExpression<Double> rating = new CaseBuilder()
-                        .when(ratingSum.loe(0.0).or(book.reviewCount.loe(0)))
+                        .when(ratingSum.loe(0.0).or(bookStats.reviewCount.loe(0)))
                         .then(0.0)
-                        .otherwise(ratingSum.divide(book.reviewCount));
+                        .otherwise(ratingSum.divide(bookStats.reviewCount));
                 yield direction.equalsIgnoreCase("ASC") ? rating.goe(Double.parseDouble(cursor)) : rating.loe(Double.parseDouble(cursor));
             }
             case "publishedDate" -> direction.equalsIgnoreCase("ASC") ?
                     book.publishedDate.goe(LocalDate.parse(cursor)) : book.publishedDate.loe(LocalDate.parse(cursor));
             case "reviewCount" ->
-                    direction.equalsIgnoreCase("ASC") ? book.reviewCount.goe(Integer.parseInt(cursor)) : book.reviewCount.loe(Integer.parseInt(cursor));
+                    direction.equalsIgnoreCase("ASC") ? bookStats.reviewCount.goe(Integer.parseInt(cursor)) : bookStats.reviewCount.loe(Integer.parseInt(cursor));
             default -> direction.equalsIgnoreCase("ASC") ? book.title.goe(cursor) : book.title.loe(cursor);
         };
     }

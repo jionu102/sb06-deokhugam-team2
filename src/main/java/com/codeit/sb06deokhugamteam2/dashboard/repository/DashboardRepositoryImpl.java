@@ -36,14 +36,11 @@ public class DashboardRepositoryImpl implements DashboardRepositoryCustom {
             if (direction == Sort.Direction.ASC) {
                 builder.and(
                         dashboard.rank.gt(Long.parseLong(cursor))
-                                // 순위가 같을 경우
-                                .or(dashboard.rank.eq(Long.parseLong(cursor)).and(dashboard.createdAt.gt(after)))
                 );
 
             } else {
                 builder.and(
                         dashboard.rank.lt(Long.parseLong(cursor))
-                                .or(dashboard.rank.eq(Long.parseLong(cursor)).and(dashboard.createdAt.lt(after)))
                 );
             }
         }
