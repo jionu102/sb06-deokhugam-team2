@@ -34,22 +34,6 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @NotNull
-    @Column(name = "rating", nullable = false)
-    private Integer rating;
-
-    @NotNull
-    @Column(name = "content", nullable = false, length = 500)
-    private String content;
-
-    @NotNull
-    @Column(name = "like_count", nullable = false)
-    private Integer likeCount;
-
-    @NotNull
-    @Column(name = "comment_count", nullable = false)
-    private Integer commentCount;
-
     @OneToMany(
             fetch = FetchType.LAZY,
             mappedBy = "review",
@@ -60,6 +44,25 @@ public class Review {
             orphanRemoval = true
     )
     private Set<ReviewLike> likes = new HashSet<>();
+
+    @NotNull
+    @OneToOne(
+            mappedBy = "review",
+            cascade = {
+                    CascadeType.PERSIST,
+                    CascadeType.MERGE
+            },
+            orphanRemoval = true
+    )
+    private ReviewStat reviewStat;
+
+    @NotNull
+    @Column(name = "rating", nullable = false)
+    private Integer rating;
+
+    @NotNull
+    @Column(name = "content", nullable = false, length = 500)
+    private String content;
 
     @NotNull
     @Column(name = "created_at", nullable = false)
@@ -84,26 +87,6 @@ public class Review {
         return this;
     }
 
-    public Review rating(Integer rating) {
-        this.rating = rating;
-        return this;
-    }
-
-    public Review content(String content) {
-        this.content = content;
-        return this;
-    }
-
-    public Review likeCount(Integer likeCount) {
-        this.likeCount = likeCount;
-        return this;
-    }
-
-    public Review commentCount(Integer commentCount) {
-        this.commentCount = commentCount;
-        return this;
-    }
-
     public Review addLike(ReviewLike reviewLike) {
         this.likes.add(reviewLike);
         reviewLike.review(this);
@@ -113,6 +96,28 @@ public class Review {
     public Review removeLike(ReviewLike reviewLike) {
         this.likes.remove(reviewLike);
         reviewLike.review(null);
+        return this;
+    }
+
+    public Review reviewStat(ReviewStat reviewStat) {
+        this.reviewStat = reviewStat;
+        reviewStat.review(this);
+        return this;
+    }
+
+    public Review removeReviewStat(ReviewStat reviewStat) {
+        this.reviewStat = null;
+        reviewStat.review(null);
+        return this;
+    }
+
+    public Review rating(Integer rating) {
+        this.rating = rating;
+        return this;
+    }
+
+    public Review content(String content) {
+        this.content = content;
         return this;
     }
 
@@ -138,24 +143,20 @@ public class Review {
         return user;
     }
 
+    public Set<ReviewLike> likes() {
+        return likes;
+    }
+
+    public ReviewStat reviewStat() {
+        return reviewStat;
+    }
+
     public Integer rating() {
         return rating;
     }
 
     public String content() {
         return content;
-    }
-
-    public Integer likeCount() {
-        return likeCount;
-    }
-
-    public Integer commentCount() {
-        return commentCount;
-    }
-
-    public Set<ReviewLike> likes() {
-        return likes;
     }
 
     public Instant createdAt() {

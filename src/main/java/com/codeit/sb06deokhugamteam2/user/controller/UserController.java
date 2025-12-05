@@ -1,24 +1,24 @@
 package com.codeit.sb06deokhugamteam2.user.controller;
 
 
-//import com.codeit.sb06deokhugamteam2.user.dto.CursorPageResponse;
-//import com.codeit.sb06deokhugamteam2.user.dto.PowerUserDto;
+import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
+import com.codeit.sb06deokhugamteam2.common.enums.RankingType;
+import com.codeit.sb06deokhugamteam2.user.dto.CursorPageResponse;
+import com.codeit.sb06deokhugamteam2.user.dto.PowerUserDto;
 import com.codeit.sb06deokhugamteam2.user.dto.UserDto;
 import com.codeit.sb06deokhugamteam2.user.dto.UserLoginRequest;
 import com.codeit.sb06deokhugamteam2.user.dto.UserRegisterRequest;
 import com.codeit.sb06deokhugamteam2.user.dto.UserUpdateRequest;
-import com.codeit.sb06deokhugamteam2.user.entity.User;
 import com.codeit.sb06deokhugamteam2.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-//import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.data.crossstore.ChangeSetPersister;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-//import java.time.LocalDateTime;
-//import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -76,19 +76,20 @@ public class UserController {
     }
 
 
-//    @GetMapping("/power")
-//    public ResponseEntity<CursorPageResponse<PowerUserDto>> getPowerUsers(
-//            @RequestParam(defaultValue = "DAILY") String period,
-//            @RequestParam(defaultValue = "DESC") String direction,
-//            @RequestParam(required = false) String cursor,
-//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime after,
-//            @RequestParam(defaultValue = "50") int limit) {
-//
-//        LocalDateTime effectiveAfter = (after != null) ? after : LocalDateTime.now();
-//
-//        CursorPageResponse<PowerUserDto> response = userService.getPowerUsers(
-//                period, direction, cursor, effectiveAfter, limit);
-//
-//        return ResponseEntity.ok(response);
-//    }
+    @GetMapping("/power")
+    public ResponseEntity<CursorPageResponse<PowerUserDto>> getPowerUsers(
+            @RequestParam(defaultValue = "DAILY") PeriodType period,
+            @RequestParam(defaultValue = "USER") RankingType rankingType,
+            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime after,
+            @RequestParam(defaultValue = "50") int limit) {
+
+        LocalDateTime effectiveAfter = (after != null) ? after : LocalDateTime.now();
+
+        CursorPageResponse<PowerUserDto> response = userService.getPowerUsers(
+                period, rankingType, direction, cursor, effectiveAfter, limit);
+
+        return ResponseEntity.ok(response);
+    }
 }

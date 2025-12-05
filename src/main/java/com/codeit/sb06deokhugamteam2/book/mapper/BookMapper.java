@@ -3,6 +3,7 @@ package com.codeit.sb06deokhugamteam2.book.mapper;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.data.PopularBookDto;
 import com.codeit.sb06deokhugamteam2.book.entity.Book;
+import com.codeit.sb06deokhugamteam2.book.entity.BookStats;
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import com.codeit.sb06deokhugamteam2.dashboard.entity.Dashboard;
 import org.springframework.stereotype.Component;
@@ -10,6 +11,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class BookMapper {
     public BookDto toDto(Book book) {
+        BookStats stats = book.getBookStats();
+        int reviewCount = stats == null ? 0 : stats.getReviewCount();
+        int ratingSum =  stats == null ? 0 : stats.getRatingSum();
+
         return BookDto.builder()
                 .isbn(book.getIsbn())
                 .id(book.getId())
@@ -19,8 +24,8 @@ public class BookMapper {
                 .updatedAt(book.getUpdatedAt())
                 .description(book.getDescription())
                 .publishedDate(book.getPublishedDate())
-                .reviewCount(book.getReviewCount())
-                .rating(ratingOperation(book.getReviewCount(), book.getRatingSum()))
+                .reviewCount(reviewCount)
+                .rating(ratingOperation(reviewCount, ratingSum))
                 .thumbnailUrl(book.getThumbnailUrl())
                 .publisher(book.getPublisher())
                 .build();

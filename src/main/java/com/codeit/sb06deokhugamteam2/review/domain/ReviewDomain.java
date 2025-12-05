@@ -10,10 +10,9 @@ public class ReviewDomain {
     private final UUID id;
     private final UUID bookId;
     private final UUID userId;
+    private final ReviewStatDomain reviewStat;
     private ReviewRating rating;
     private ReviewContent content;
-    private int likeCount;
-    private int commentCount;
     private final Instant createdAt;
     private Instant updatedAt;
 
@@ -21,28 +20,25 @@ public class ReviewDomain {
             UUID id,
             UUID bookId,
             UUID userId,
+            ReviewStatDomain reviewStat,
             ReviewRating rating,
             ReviewContent content,
-            int likeCount,
-            int commentCount,
             Instant createdAt,
             Instant updatedAt
     ) {
         this.id = id;
         this.bookId = bookId;
         this.userId = userId;
+        this.reviewStat = reviewStat;
         this.rating = rating;
         this.content = content;
-        this.likeCount = likeCount;
-        this.commentCount = commentCount;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public static ReviewDomain write(UUID bookId, UUID userId, ReviewRating rating, ReviewContent content) {
+    public static ReviewDomain create(UUID bookId, UUID userId, ReviewRating rating, ReviewContent content) {
         UUID id = UUID.randomUUID();
-        int likeCount = 0;
-        int commentCount = 0;
+        ReviewStatDomain reviewStat = ReviewStatDomain.create(id);
         Instant createdAt = Instant.now();
         Instant updatedAt = createdAt;
 
@@ -50,48 +46,46 @@ public class ReviewDomain {
                 id,
                 bookId,
                 userId,
+                reviewStat,
                 rating,
                 content,
-                likeCount,
-                commentCount,
                 createdAt,
                 updatedAt
         );
     }
 
-    public static ReviewDomain loadSnapshot(Snapshot snapshot) {
-        UUID id = snapshot.id();
-        UUID bookId = snapshot.bookId();
-        UUID userId = snapshot.userId();
-        ReviewRating rating = snapshot.rating();
-        ReviewContent content = snapshot.content();
-        int likeCount = snapshot.likeCount();
-        int commentCount = snapshot.commentCount();
-        Instant createdAt = snapshot.createdAt();
-        Instant updatedAt = snapshot.updatedAt();
+    public static ReviewDomain from(Snapshot reviewSnapshot) {
+        UUID id = reviewSnapshot.id();
+        UUID bookId = reviewSnapshot.bookId();
+        UUID userId = reviewSnapshot.userId();
+        ReviewStatDomain reviewStat = ReviewStatDomain.from(reviewSnapshot.reviewStatSnapshot());
+        ReviewRating rating = reviewSnapshot.rating();
+        ReviewContent content = reviewSnapshot.content();
+        Instant createdAt = reviewSnapshot.createdAt();
+        Instant updatedAt = reviewSnapshot.updatedAt();
 
         return new ReviewDomain(
                 id,
                 bookId,
                 userId,
+                reviewStat,
                 rating,
                 content,
-                likeCount,
-                commentCount,
                 createdAt,
                 updatedAt
         );
     }
 
-    public Snapshot createSnapshot() {
+    public Snapshot toSnapshot() {
+        ReviewStatDomain.Snapshot reviewStatSnapshot = this.reviewStat.toSnapshot();
+
         return new Snapshot(
                 id,
                 bookId,
                 userId,
+                reviewStatSnapshot,
                 rating,
                 content,
-                likeCount,
-                commentCount,
                 createdAt,
                 updatedAt
         );
@@ -131,10 +125,9 @@ public class ReviewDomain {
             UUID id,
             UUID bookId,
             UUID userId,
+            ReviewStatDomain.Snapshot reviewStatSnapshot,
             ReviewRating rating,
             ReviewContent content,
-            int likeCount,
-            int commentCount,
             Instant createdAt,
             Instant updatedAt
     ) {

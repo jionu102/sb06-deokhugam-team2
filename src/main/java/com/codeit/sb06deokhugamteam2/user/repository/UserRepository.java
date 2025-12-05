@@ -20,7 +20,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query(value = "delete FROM USERS WHERE id = :userId", nativeQuery = true)
     void hardDeleteUserById(@Param("userId") UUID userId);
 
-    // 물리 삭제 대상자 조회 못하는 문제로 JPQL 쿼리 추가 (엔티티에 @SQLRestriction 우회)
+    // 물리 삭제 대상자 찾지 못하는 문제로 JPQL 쿼리 추가 (엔티티에 @SQLRestriction 우회)
     @Query(value = """
     SELECT u.id
     FROM User u
@@ -28,4 +28,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     AND u.deletedAt <= :olderThan
 """)
     List<UUID> findHardDeleteCandidatesIgnoringRestriction(@Param("olderThan") LocalDateTime olderThan);
-}
+} //물리삭제 대상 찾을때는 findHardDeleteCandidatesIgnoringRestriction()호출,null조건없이
+//not null 과 olderThan 조건만 적용되어 물리삭제대상 찾도록함

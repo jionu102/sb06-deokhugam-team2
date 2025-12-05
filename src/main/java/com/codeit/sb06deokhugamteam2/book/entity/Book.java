@@ -50,18 +50,17 @@ public class Book {
     @Column(nullable = true, name = "thumbnail_url")
     private String thumbnailUrl;
 
+    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     @Setter
-    @Builder.Default    // 빌더 사용 시 기본값 설정
-    @Column(nullable = false, name = "review_count")
-    private int reviewCount = 0;
-
-    @Setter
-    @Builder.Default
-    @Column(nullable = false, name = "rating_sum")
-    private int ratingSum = 0;
+    private BookStats bookStats;
 
     @Builder.Default
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "book",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     @BatchSize(size = 100)
     private List<Review> reviews = new ArrayList<>();
 

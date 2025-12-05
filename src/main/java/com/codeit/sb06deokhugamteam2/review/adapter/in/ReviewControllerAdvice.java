@@ -17,20 +17,20 @@ public class ReviewControllerAdvice {
 
     private static final Logger log = LoggerFactory.getLogger(ReviewControllerAdvice.class);
 
-    @ExceptionHandler(ReviewUserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(ReviewUserNotFoundException e) {
+    @ExceptionHandler(InvalidReviewCountException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidReviewCountException(InvalidReviewCountException e) {
         log.error(e.getMessage());
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(Instant.now())
-                .code("USER_NOT_FOUND")
-                .message("사용자를 찾을 수 없습니다.")
+                .code("INVALID_REVIEW_COUNT")
+                .message("리뷰 카운트는 음수가 될 수 없습니다.")
                 .details(Collections.emptyMap())
                 .exceptionType(e.getClass().getSuperclass().getSimpleName())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
-
+    
     @ExceptionHandler(ReviewBookNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleBookNotFoundException(ReviewBookNotFoundException e) {
         log.error(e.getMessage());
@@ -43,6 +43,20 @@ public class ReviewControllerAdvice {
                 .status(HttpStatus.NOT_FOUND.value())
                 .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(ReviewUserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(ReviewUserNotFoundException e) {
+        log.error(e.getMessage());
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .code("USER_NOT_FOUND")
+                .message("사용자를 찾을 수 없습니다.")
+                .details(Collections.emptyMap())
+                .exceptionType(e.getClass().getSuperclass().getSimpleName())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(AlreadyExistsReviewException.class)

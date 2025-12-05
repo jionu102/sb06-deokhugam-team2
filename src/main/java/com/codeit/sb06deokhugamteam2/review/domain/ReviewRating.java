@@ -9,4 +9,8 @@ public record ReviewRating(int value) {
             throw new InvalidReviewRatingException(value);
         }
     }
+
+    public ReviewRating(Integer value) {
+        this(value.intValue());
+    }
 }
