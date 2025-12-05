@@ -88,4 +88,13 @@ public class ReviewController implements ReviewApi {
         ReviewDto response = updateReviewUseCase.updateReview(path, header, requestBody);
         return ResponseEntity.ok(response);
     }
+
+    @Override
+    @PostMapping("/{reviewId}/like")
+    public ResponseEntity<ReviewLikeDto> postReviewLike(
+            @PathVariable(name = "reviewId") String path,
+            @RequestHeader(name = "Deokhugam-Request-User-ID") String header
+    ) {
+        throw new RuntimeException("Not Implemented");
+    }
 }
