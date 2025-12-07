@@ -8,6 +8,7 @@ import com.codeit.sb06deokhugamteam2.book.dto.request.BookUpdateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.response.CursorPageResponseBookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.service.BookService;
+import com.codeit.sb06deokhugamteam2.book.service.OcrService;
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BookController {
     private final BookService bookService;
+    private final OcrService ocrService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BookDto> create(
@@ -94,7 +96,7 @@ public class BookController {
     public ResponseEntity<String> getIsbnByOcr(
             @RequestParam MultipartFile image
     ) {
-        String isbn = bookService.getIsbnByOcrApi(image);
+        String isbn = ocrService.getIsbnByOcrApi(image);
         return ResponseEntity.ok(isbn);
     }
 

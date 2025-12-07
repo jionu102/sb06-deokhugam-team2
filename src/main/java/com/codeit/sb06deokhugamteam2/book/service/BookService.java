@@ -1,7 +1,6 @@
 package com.codeit.sb06deokhugamteam2.book.service;
 
 import com.codeit.sb06deokhugamteam2.book.client.NaverSearchClient;
-import com.codeit.sb06deokhugamteam2.book.client.OcrClient;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.data.PopularBookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
@@ -20,28 +19,19 @@ import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import com.codeit.sb06deokhugamteam2.common.enums.RankingType;
 import com.codeit.sb06deokhugamteam2.common.exception.ErrorCode;
 import com.codeit.sb06deokhugamteam2.common.exception.exceptions.BookException;
-import com.codeit.sb06deokhugamteam2.common.exception.exceptions.OcrException;
 import com.codeit.sb06deokhugamteam2.dashboard.entity.Dashboard;
 import com.codeit.sb06deokhugamteam2.dashboard.repository.DashboardRepository;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -54,9 +44,7 @@ public class BookService {
     private final S3Storage s3Storage;
     private final BookMapper bookMapper;
     private final BookCursorMapper bookCursorMapper;
-    private final ObjectMapper objectMapper;
     private final NaverSearchClient naverSearchClient;
-    private final OcrClient ocrClient;
 
     public BookDto create(BookCreateRequest bookCreateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
         if (bookRepository.findByIsbn(bookCreateRequest.getIsbn()).isPresent()) {
@@ -184,45 +172,6 @@ public class BookService {
         });
 
         return bookCursorMapper.toCursorBookDto(popularBookDtoList, limit);
-    }
-
-    @Transactional(readOnly = true)
-    public String getIsbnByOcrApi(MultipartFile image) {
-
-        // 무료버전 OCR API는 1MB 이하의 파일만 처리 가능
-        // 월 25,000번 요청 가능
-        if (image.getSize() > 1024 * 1024) {
-            throw new RuntimeException("파일 크기는 1MB 이하여야 합니다.");
-        }
-
-        try {
-
-            String json = ocrClient.callOcrApi(image);
-
-            JsonNode root = objectMapper.readTree(json);
-
-            String parsedText = root
-                    .get("ParsedResults")
-                    .get(0)
-                    .get("ParsedText")
-                    .asText();
-
-            Pattern pattern = Pattern.compile("(\\d+)-(\\d+)-(\\d+)-(\\d+)-(\\d+)");     // ex. 978-3-16-148410-0
-            Matcher matcher = pattern.matcher(parsedText);
-
-            if (matcher.find()) {
-                return matcher.group(0).replaceAll("-", "");
-            } else {
-                throw new OcrException(ErrorCode.ISBN_NOT_FOUND,
-                        Map.of("message", ErrorCode.ISBN_NOT_FOUND.getMessage(), "detail", parsedText),
-                        HttpStatus.NOT_FOUND);
-            }
-
-        } catch (IOException e) {
-            throw new OcrException(ErrorCode.OCR_API_ERROR,
-                    Map.of("message", ErrorCode.OCR_API_ERROR.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     public void deleteSoft(UUID bookId) {
