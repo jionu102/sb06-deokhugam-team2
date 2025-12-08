@@ -210,6 +210,8 @@ public class BookService {
     }
 
     public void deleteSoft(UUID bookId) {
+        bookRepository.deleteSoft_Reviews_CommentsByBookId(bookId);
+        bookRepository.deleteSoft_ReviewsByBookId(bookId);
         bookRepository.deleteSoftById(bookId);
         log.info("도서 논리 삭제 완료: {}", bookId);
     }
