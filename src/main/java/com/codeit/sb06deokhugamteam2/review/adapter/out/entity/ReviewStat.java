@@ -2,13 +2,11 @@ package com.codeit.sb06deokhugamteam2.review.adapter.out.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "reviewstats")
+@Table(name = "review_stats")
 public class ReviewStat {
 
     @Id
@@ -17,7 +15,6 @@ public class ReviewStat {
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "review_id", nullable = false)
     private Review review;
 

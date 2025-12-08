@@ -2,9 +2,9 @@ package com.codeit.sb06deokhugamteam2.user.entity;
 
 
 import com.codeit.sb06deokhugamteam2.comment.entity.Comment;
+import com.codeit.sb06deokhugamteam2.like.adapter.out.entity.ReviewLike;
 import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.Review;
-import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.ReviewLike;
-import jakarta.persistence.CascadeType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,7 +34,6 @@ import java.util.UUID;
         SET deleted_at = current_timestamp()
         WHERE id = ?
         """)
-//물리삭제 대상을 찾을때 null조건을 강제로 설정해줘서 못찾음,하지만 논리삭제 조회방지용으로 필요
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @Builder
@@ -65,15 +64,15 @@ public class User {
     private LocalDateTime deletedAt;
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", orphanRemoval = true)
     private List<ReviewLike> reviewLikes = new ArrayList<>();
 
     public void updateNickname(String nickname) {

@@ -1,11 +1,11 @@
 package com.codeit.sb06deokhugamteam2.book.controller;
 
-import com.codeit.sb06deokhugamteam2.book.dto.response.CursorPageResponsePopularBookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookImageCreateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookUpdateRequest;
 import com.codeit.sb06deokhugamteam2.book.dto.response.CursorPageResponseBookDto;
+import com.codeit.sb06deokhugamteam2.book.dto.response.CursorPageResponsePopularBookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.response.NaverBookDto;
 import com.codeit.sb06deokhugamteam2.book.service.BookService;
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;

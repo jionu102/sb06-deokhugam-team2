@@ -21,12 +21,19 @@ public interface BookRepository extends JpaRepository<Book, UUID>, BookRepositor
 
     Optional<Book> findByIsbn(String isbn);
 
-    // @SoftDelete
     @Modifying
-    @Query("DELETE FROM Book b WHERE b.id = :bookId")
+    @Query("UPDATE Book b SET b.deleted = true WHERE b.id = :bookId")
     void deleteSoftById(UUID bookId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying
+    @Query("UPDATE Review r SET r.deleted = true WHERE r.book.id = :bookId")
+    void deleteSoft_ReviewsByBookId(UUID bookId);
+
+    @Modifying
+    @Query("UPDATE Comment c SET c.deleted = true WHERE c.review.book.id = :bookId")
+    void deleteSoft_Reviews_CommentsByBookId(UUID bookId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "DELETE FROM books WHERE id = :bookId AND deleted = true", nativeQuery = true)
     void deleteHardById(UUID bookId);
 }

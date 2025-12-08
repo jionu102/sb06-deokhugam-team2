@@ -2,8 +2,6 @@ package com.codeit.sb06deokhugamteam2.book.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
 
 import java.util.UUID;
 
@@ -21,7 +19,6 @@ public class BookStats {
     @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "book_id")
-    @NotFound(action = NotFoundAction.IGNORE)
     private Book book;
 
     @Setter

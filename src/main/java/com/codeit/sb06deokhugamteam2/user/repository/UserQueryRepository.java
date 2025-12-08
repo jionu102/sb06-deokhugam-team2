@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import static com.codeit.sb06deokhugamteam2.comment.entity.QComment.comment;
 import static com.codeit.sb06deokhugamteam2.review.adapter.out.entity.QReview.review;
-import static com.codeit.sb06deokhugamteam2.review.adapter.out.entity.QReviewLike.reviewLike;
+
+
+import static com.codeit.sb06deokhugamteam2.like.adapter.out.entity.QReviewLike.reviewLike;
 import static com.codeit.sb06deokhugamteam2.user.entity.QUser.user;
 
 

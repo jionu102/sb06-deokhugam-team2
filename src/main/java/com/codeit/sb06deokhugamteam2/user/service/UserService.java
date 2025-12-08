@@ -26,6 +26,7 @@ import org.springframework.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 
@@ -39,6 +40,8 @@ public class UserService {
     private final UserQueryRepository userQueryRepository;
     private final UserMapper userMapper;
     private final Validator validator;
+    // private final ReviewRepository reviewRepository;
+    // private final CommentRepository commentRepository;
 
     @Transactional
     public UserDto register(UserRegisterRequest request) {
@@ -56,17 +59,14 @@ public class UserService {
 
     public UserDto login(UserLoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BasicException(ErrorCode.INVALID_USER_DATA,
-                        Collections.emptyMap(), HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new NoSuchElementException("입력한 사용자 정보가 잘못 되었습니다"));
 
         if (user.getDeletedAt() != null) {
-            throw new BasicException(ErrorCode.INVALID_USER_DATA,
-                    Collections.emptyMap(), HttpStatus.BAD_REQUEST);
+            throw new NoSuchElementException("탈퇴했거나 비활성화된 사용자입니다");
         }
 
         if (!request.password().equals(user.getPassword())) {
-            throw new BasicException(ErrorCode.INVALID_USER_PASSWORD,
-                    Collections.emptyMap(), HttpStatus.BAD_REQUEST);
+            throw new NoSuchElementException("입력한 사용자 정보가 잘못 되었습니다");
         }
 
         return userMapper.toDto(user);
@@ -75,8 +75,7 @@ public class UserService {
     public UserDto getUserInfo(UUID userId) {
         //논리 삭제된 사용자, 조회에서 제외
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BasicException(ErrorCode.USER_NOT_FOUND,
-                        Collections.emptyMap(), HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다: " + userId));
 
         return userMapper.toDto(user);
     }
@@ -84,12 +83,14 @@ public class UserService {
     @Transactional
     public void softDeleteUser(UUID userId) {
 
-        if (!userRepository.existsById(userId)) {
-            throw new BasicException(ErrorCode.USER_NOT_FOUND,
-                    Collections.emptyMap(), HttpStatus.NOT_FOUND);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BasicException(ErrorCode.USER_NOT_FOUND,
+                        Collections.emptyMap(), HttpStatus.NOT_FOUND));
 
-        userRepository.deleteById(userId);
+//        reviewRepository.softDeleteAllByUserId(userId);
+//        commentRepository.softDeleteAllByUserId(userId);
+
+        userRepository.delete(user);
     }
 
     @Transactional
@@ -111,8 +112,7 @@ public class UserService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BasicException(ErrorCode.USER_NOT_FOUND,
-                        Collections.emptyMap(), HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new NoSuchElementException("닉네임을 수정할 사용자를 찾을 수 없습니다: " + userId));
 
         user.updateNickname(validationRequest.getNickname());
 
@@ -132,8 +132,7 @@ public class UserService {
 
         // 1. 사용자 엔티티 조회 (리뷰/댓글 목록 Fetch Join을 통해 한 번에 로딩)
         User user = userQueryRepository.findByIdWithReviewsAndComments(userId)
-                .orElseThrow(() -> new BasicException(ErrorCode.USER_NOT_FOUND,
-                        Collections.emptyMap(), HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new NoSuchElementException("물리 삭제할 사용자를 찾을 수 없습니다: " + userId));
 
         userRepository.delete(user);
     }
