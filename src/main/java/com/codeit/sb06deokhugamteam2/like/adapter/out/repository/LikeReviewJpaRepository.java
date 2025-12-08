@@ -2,7 +2,7 @@ package com.codeit.sb06deokhugamteam2.like.adapter.out.repository;
 
 import com.codeit.sb06deokhugamteam2.like.adapter.out.entity.ReviewLike;
 import com.codeit.sb06deokhugamteam2.like.adapter.out.entity.ReviewLikeId;
-import com.codeit.sb06deokhugamteam2.like.application.port.out.SaveLikeReviewRepositoryPort;
+import com.codeit.sb06deokhugamteam2.like.application.port.out.SaveLikeReviewPort;
 import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.Review;
 import com.codeit.sb06deokhugamteam2.user.entity.User;
 import com.querydsl.core.types.EntityPath;
@@ -17,7 +17,7 @@ import java.util.UUID;
 import static com.codeit.sb06deokhugamteam2.like.adapter.out.entity.QReviewLike.reviewLike;
 
 @Repository
-public class LikeReviewJpaRepositoryAdapter implements SaveLikeReviewRepositoryPort {
+public class LikeReviewJpaRepository implements SaveLikeReviewPort {
 
     @PersistenceContext
     private EntityManager em;

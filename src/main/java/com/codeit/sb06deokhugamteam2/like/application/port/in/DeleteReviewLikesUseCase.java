@@ -2,7 +2,7 @@ package com.codeit.sb06deokhugamteam2.like.application.port.in;
 
 import java.util.UUID;
 
-public interface HandleReviewDeletedUseCase {
+public interface DeleteReviewLikesUseCase {
 
-    void handle(UUID reviewId);
+    void deleteReviews(UUID reviewId);
 }

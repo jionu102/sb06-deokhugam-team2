@@ -158,8 +158,16 @@ public class ReviewDomain {
         return bookId;
     }
 
+    public UUID userId() {
+        return userId;
+    }
+
     public ReviewRatingDomain rating() {
         return rating;
+    }
+
+    public ReviewContentDomain content() {
+        return content;
     }
 
     public boolean isHidden() {

@@ -25,33 +25,42 @@ import java.util.UUID;
 public class ReviewCommandService
         implements CreateReviewUseCase, UpdateReviewUseCase, DeleteReviewUseCase, ToggleReviewLikeUseCase {
 
-    private final ReviewService service;
-    private final ReviewEventPublisherPort eventPublisher;
-    private final LoadReviewUserRepositoryPort loadUserRepository;
-    private final LoadReviewBookRepositoryPort loadBookRepository;
-    private final SaveReviewBookRepositoryPort saveBookRepository;
-    private final LoadReviewRepositoryPort loadReviewRepository;
-    private final SaveReviewRepositoryPort saveReviewRepository;
-    private final LoadReviewLikeRepositoryPort loadReviewLikeRepository;
+    private final ReviewService reviewService;
+    private final ReviewEventPublisher eventPublisher;
+    private final LoadReviewUserPort loadUserPort;
+    private final SaveReviewUserPort saveUserPort;
+    private final LoadReviewBookPort loadBookPort;
+    private final SaveReviewBookPort saveBookPort;
+    private final LoadReviewPort loadReviewPort;
+    private final SaveReviewPort saveReviewPort;
+    private final SaveReviewCommentPort saveCommentPort;
+    private final LoadReviewLikePort loadLikePort;
+    private final SaveReviewNotificationPort saveReviewNotificationPort;
 
     public ReviewCommandService(
-            ReviewService service,
-            ReviewEventPublisherPort eventPublisher,
-            LoadReviewUserRepositoryPort loadUserRepository,
-            LoadReviewBookRepositoryPort loadBookRepository,
-            SaveReviewBookRepositoryPort saveBookRepository,
-            LoadReviewRepositoryPort loadReviewRepository,
-            SaveReviewRepositoryPort saveReviewRepository,
-            LoadReviewLikeRepositoryPort loadReviewLikeRepository
+            ReviewService reviewService,
+            ReviewEventPublisher eventPublisher,
+            LoadReviewUserPort loadUserPort,
+            SaveReviewUserPort saveUserPort,
+            LoadReviewBookPort loadBookPort,
+            SaveReviewBookPort saveBookPort,
+            LoadReviewPort loadReviewPort,
+            SaveReviewPort saveReviewPort,
+            SaveReviewCommentPort saveCommentPort,
+            LoadReviewLikePort loadLikePort,
+            SaveReviewNotificationPort saveReviewNotificationPort
     ) {
-        this.service = service;
+        this.reviewService = reviewService;
         this.eventPublisher = eventPublisher;
-        this.loadUserRepository = loadUserRepository;
-        this.loadBookRepository = loadBookRepository;
-        this.saveBookRepository = saveBookRepository;
-        this.loadReviewRepository = loadReviewRepository;
-        this.saveReviewRepository = saveReviewRepository;
-        this.loadReviewLikeRepository = loadReviewLikeRepository;
+        this.loadUserPort = loadUserPort;
+        this.saveUserPort = saveUserPort;
+        this.loadBookPort = loadBookPort;
+        this.saveBookPort = saveBookPort;
+        this.loadReviewPort = loadReviewPort;
+        this.saveReviewPort = saveReviewPort;
+        this.saveCommentPort = saveCommentPort;
+        this.loadLikePort = loadLikePort;
+        this.saveReviewNotificationPort = saveReviewNotificationPort;
     }
 
     @Override
@@ -62,21 +71,21 @@ public class ReviewCommandService
         var content = new ReviewContentDomain(requestBody.content());
         ReviewDomain review = ReviewDomain.create(bookId, userId, rating, content);
 
-        if (!loadUserRepository.existsById(userId)) {
+        if (!loadUserPort.existsById(userId)) {
             throw new ReviewUserNotFoundException(userId);
         }
-        if (loadReviewRepository.existsByBookIdAndUserId(bookId, userId)) {
+        if (loadReviewPort.existsByBookIdAndUserId(bookId, userId)) {
             throw new AlreadyExistsReviewException(bookId);
         }
-        ReviewBookDomain book = loadBookRepository.findByIdForUpdate(bookId)
+        ReviewBookDomain book = loadBookPort.findByIdForUpdate(bookId)
                 .orElseThrow(() -> new ReviewBookNotFoundException(bookId));
-        service.registerReview(review, book);
-        saveReviewRepository.save(review.toSnapshot());
-        saveBookRepository.update(book);
+        reviewService.registerReview(review, book);
+        saveReviewPort.save(review.toSnapshot());
+        saveBookPort.update(book);
         review.events().forEach(eventPublisher::publish);
         review.clearEvents();
 
-        return loadReviewRepository.findById(review.id(), null)
+        return loadReviewPort.findById(review.id(), null)
                 .orElseThrow(() -> new ReviewNotFoundException(review.id()));
     }
 
@@ -85,13 +94,15 @@ public class ReviewCommandService
         UUID reviewId = UUID.fromString(path);
         UUID requestUserId = UUID.fromString(header);
 
-        ReviewDomain review = loadReviewRepository.findById(reviewId)
+        ReviewDomain review = saveReviewPort.findById(reviewId)
+                .map(ReviewDomain::from)
                 .orElseThrow(() -> new ReviewNotFoundException(reviewId));
-        ReviewBookDomain book = loadBookRepository.findByIdForUpdate(review.bookId())
+        ReviewBookDomain book = loadBookPort.findByIdForUpdate(review.bookId())
                 .orElseThrow(() -> new ReviewBookNotFoundException(review.bookId()));
-        service.hideReview(review, requestUserId, book);
-        saveReviewRepository.softDelete(review.id());
-        saveBookRepository.update(book);
+        reviewService.hideReview(review, requestUserId, book);
+        saveReviewPort.softDelete(review.id());
+        saveCommentPort.softDelete(review.id());
+        saveBookPort.update(book);
         review.events().forEach(eventPublisher::publish);
         review.clearEvents();
     }
@@ -101,13 +112,14 @@ public class ReviewCommandService
         UUID reviewId = UUID.fromString(path);
         UUID requestUserId = UUID.fromString(header);
 
-        ReviewDomain review = loadReviewRepository.findByIdWithoutDeleted(reviewId)
+        ReviewDomain review = saveReviewPort.findByIdWithoutDeleted(reviewId)
+                .map(ReviewDomain::from)
                 .orElseThrow(() -> new ReviewNotFoundException(reviewId));
-        ReviewBookDomain book = loadBookRepository.findByIdForUpdate(review.bookId())
+        ReviewBookDomain book = loadBookPort.findByIdForUpdate(review.bookId())
                 .orElseThrow(() -> new ReviewBookNotFoundException(review.bookId()));
-        service.deleteReview(review, requestUserId, book);
-        saveReviewRepository.hardDelete(review.id());
-        saveBookRepository.update(book);
+        reviewService.deleteReview(review, requestUserId, book);
+        saveReviewPort.hardDelete(review.id());
+        saveBookPort.update(book);
         review.events().forEach(eventPublisher::publish);
         review.clearEvents();
     }
@@ -119,17 +131,18 @@ public class ReviewCommandService
         var newRating = new ReviewRatingDomain(requestBody.rating());
         var newContent = new ReviewContentDomain(requestBody.content());
 
-        ReviewDomain review = loadReviewRepository.findById(reviewId)
+        ReviewDomain review = saveReviewPort.findById(reviewId)
+                .map(ReviewDomain::from)
                 .orElseThrow(() -> new ReviewNotFoundException(reviewId));
-        ReviewBookDomain book = loadBookRepository.findByIdForUpdate(review.bookId())
+        ReviewBookDomain book = loadBookPort.findByIdForUpdate(review.bookId())
                 .orElseThrow(() -> new ReviewBookNotFoundException(review.bookId()));
-        service.editReview(review, newRating, newContent, requestUserId, book);
-        saveReviewRepository.update(review.toSnapshot());
-        saveBookRepository.update(book);
+        reviewService.editReview(review, newRating, newContent, requestUserId, book);
+        saveReviewPort.update(review.toSnapshot());
+        saveBookPort.update(book);
         review.events().forEach(eventPublisher::publish);
         review.clearEvents();
 
-        return loadReviewRepository.findById(reviewId, requestUserId)
+        return loadReviewPort.findById(reviewId, requestUserId)
                 .orElseThrow(() -> new ReviewNotFoundException(review.id()));
     }
 
@@ -138,15 +151,18 @@ public class ReviewCommandService
         UUID reviewId = UUID.fromString(path);
         UUID userId = UUID.fromString(header);
 
-        if (!loadUserRepository.existsById(userId)) {
-            throw new ReviewUserNotFoundException(userId);
-        }
-        ReviewDomain review = loadReviewRepository.findByIdForUpdate(reviewId)
+        ReviewDomain review = saveReviewPort.findByIdForUpdate(reviewId)
+                .map(ReviewDomain::from)
                 .orElseThrow(() -> new ReviewNotFoundException(reviewId));
-        ReviewLikeDomain reviewLike = loadReviewLikeRepository.findById(reviewId, userId)
+        ReviewUserDomain user = saveUserPort.findById(userId)
+                .orElseThrow(() -> new ReviewUserNotFoundException(userId));
+        ReviewLikeDomain reviewLike = loadLikePort.findById(reviewId, userId)
                 .orElseGet(() -> new ReviewLikeDomain(reviewId, userId, false));
-        service.toggleReviewLike(review, reviewLike);
-        saveReviewRepository.update(review.toSnapshot());
+        reviewService.toggleReviewLike(review, reviewLike);
+        saveReviewPort.update(review.toSnapshot());
+        ReviewLikeNotificationDomain notification = ReviewLikeNotificationDomain.create(
+                reviewId, user.id(), review.content().value(), user.nickname());
+        saveReviewNotificationPort.sendNotification(notification);
         review.events().forEach(eventPublisher::publish);
         review.clearEvents();
 

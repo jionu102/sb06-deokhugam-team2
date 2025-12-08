@@ -1,11 +1,11 @@
 package com.codeit.sb06deokhugamteam2.review.adapter.out.event;
 
-import com.codeit.sb06deokhugamteam2.review.application.port.out.ReviewEventPublisherPort;
+import com.codeit.sb06deokhugamteam2.review.application.port.out.ReviewEventPublisher;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReviewEventPublisherAdapter implements ReviewEventPublisherPort {
+public class ReviewEventPublisherAdapter implements ReviewEventPublisher {
 
     private final ApplicationEventPublisher publisher;
 

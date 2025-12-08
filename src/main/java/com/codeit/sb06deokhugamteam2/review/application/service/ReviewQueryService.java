@@ -4,7 +4,7 @@ import com.codeit.sb06deokhugamteam2.review.application.dto.request.CursorPageRe
 import com.codeit.sb06deokhugamteam2.review.application.dto.response.CursorPageResponseReviewDto;
 import com.codeit.sb06deokhugamteam2.review.application.dto.response.ReviewDto;
 import com.codeit.sb06deokhugamteam2.review.application.port.in.GetReviewUseCase;
-import com.codeit.sb06deokhugamteam2.review.application.port.out.LoadReviewRepositoryPort;
+import com.codeit.sb06deokhugamteam2.review.application.port.out.LoadReviewPort;
 import com.codeit.sb06deokhugamteam2.review.domain.exception.ReviewNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +16,10 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class ReviewQueryService implements GetReviewUseCase {
 
-    private final LoadReviewRepositoryPort loadReviewRepository;
+    private final LoadReviewPort loadReviewPort;
 
-    public ReviewQueryService(LoadReviewRepositoryPort loadReviewRepository) {
-        this.loadReviewRepository = loadReviewRepository;
+    public ReviewQueryService(LoadReviewPort loadReviewPort) {
+        this.loadReviewPort = loadReviewPort;
     }
 
     @Override
@@ -31,12 +31,12 @@ public class ReviewQueryService implements GetReviewUseCase {
         Integer limit = query.limit();
         String orderBy = query.orderBy();
 
-        List<ReviewDto> reviews = loadReviewRepository.findAll(query, requestUserId);
+        List<ReviewDto> reviews = loadReviewPort.findAll(query, requestUserId);
         List<ReviewDto> content = extractContent(reviews, limit);
         String nextCursor = extractNextCursor(reviews, limit, orderBy);
         String nextAfter = extractNextAfter(reviews, limit);
         Integer size = content.size();
-        Long totalElements = loadReviewRepository.count(userId, bookId, keyword);
+        Long totalElements = loadReviewPort.count(userId, bookId, keyword);
         Boolean hasNext = calculateHasNext(reviews, limit);
 
         return new CursorPageResponseReviewDto(
@@ -93,7 +93,7 @@ public class ReviewQueryService implements GetReviewUseCase {
         UUID reviewId = UUID.fromString(path);
         UUID requestUserId = UUID.fromString(header);
 
-        return loadReviewRepository.findById(reviewId, requestUserId)
+        return loadReviewPort.findById(reviewId, requestUserId)
                 .orElseThrow(() -> new ReviewNotFoundException(reviewId));
     }
 }

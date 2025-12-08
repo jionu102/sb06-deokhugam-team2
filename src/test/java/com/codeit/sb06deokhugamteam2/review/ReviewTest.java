@@ -2,6 +2,7 @@ package com.codeit.sb06deokhugamteam2.review;
 
 import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.Review;
 import com.codeit.sb06deokhugamteam2.review.application.dto.request.ReviewCreateRequest;
+import com.codeit.sb06deokhugamteam2.review.application.dto.response.ReviewDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,6 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.UUID;
 
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -55,18 +55,33 @@ class ReviewTest {
         result.assertThat()
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
-                .extractingPath("$.id")
-                .asString()
-                .satisfies(id -> {
-                    Review saved = entityManager.find(Review.class, UUID.fromString(id));
+                .convertTo(ReviewDto.class)
+                .satisfies(reviewDto -> {
+
+                    // verify response
                     assertSoftly(softly -> {
-                        softly.assertThat(saved.id()).isEqualTo(UUID.fromString(id));
-                        softly.assertThat(saved.rating()).isEqualTo(rating);
-                        softly.assertThat(saved.content()).isEqualTo(content);
-                        softly.assertThat(saved.reviewStat().likeCount()).isEqualTo(0);
-                        softly.assertThat(saved.reviewStat().commentCount()).isEqualTo(0);
-                        softly.assertThat(saved.createdAt()).isAfterOrEqualTo(now);
-                        softly.assertThat(saved.updatedAt()).isEqualTo(saved.createdAt()).isAfterOrEqualTo(now);
+                        softly.assertThat(reviewDto.id()).isNotNull();
+                        softly.assertThat(reviewDto.bookId()).isEqualTo(bookId);
+                        softly.assertThat(reviewDto.userId()).isEqualTo(userId);
+                        softly.assertThat(reviewDto.rating()).isEqualTo(rating);
+                        softly.assertThat(reviewDto.content()).isEqualTo(content);
+                        softly.assertThat(reviewDto.likeCount()).isEqualTo(0);
+                        softly.assertThat(reviewDto.commentCount()).isEqualTo(0);
+                        softly.assertThat(reviewDto.likedByMe()).isFalse();
+                    });
+
+                    // verify entity
+                    Review reviewEntity = entityManager.find(Review.class, reviewDto.id());
+                    assertSoftly(softly -> {
+                        softly.assertThat(reviewEntity.id()).isEqualTo(reviewDto.id());
+                        softly.assertThat(reviewEntity.rating()).isEqualTo(reviewDto.rating());
+                        softly.assertThat(reviewEntity.content()).isEqualTo(reviewDto.content());
+                        softly.assertThat(reviewEntity.reviewStat().likeCount()).isEqualTo(0);
+                        softly.assertThat(reviewEntity.reviewStat().commentCount()).isEqualTo(0);
+                        softly.assertThat(reviewEntity.createdAt()).isAfterOrEqualTo(now);
+                        softly.assertThat(reviewEntity.updatedAt())
+                                .isEqualTo(reviewEntity.createdAt())
+                                .isAfterOrEqualTo(now);
                     });
                 });
     }

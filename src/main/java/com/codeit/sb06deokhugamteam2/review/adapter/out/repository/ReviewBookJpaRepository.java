@@ -1,11 +1,9 @@
 package com.codeit.sb06deokhugamteam2.review.adapter.out.repository;
 
 import com.codeit.sb06deokhugamteam2.book.entity.BookStats;
-import com.codeit.sb06deokhugamteam2.review.application.port.out.LoadReviewBookRepositoryPort;
-import com.codeit.sb06deokhugamteam2.review.application.port.out.SaveReviewBookRepositoryPort;
+import com.codeit.sb06deokhugamteam2.review.application.port.out.LoadReviewBookPort;
+import com.codeit.sb06deokhugamteam2.review.application.port.out.SaveReviewBookPort;
 import com.codeit.sb06deokhugamteam2.review.domain.model.ReviewBookDomain;
-import com.querydsl.core.types.Expression;
-import com.querydsl.jpa.impl.JPAQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
@@ -15,14 +13,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public class ReviewBookJpaRepositoryAdapter implements LoadReviewBookRepositoryPort, SaveReviewBookRepositoryPort {
+public class ReviewBookJpaRepository implements LoadReviewBookPort, SaveReviewBookPort {
 
     @PersistenceContext
     private EntityManager em;
-
-    private <T> JPAQuery<T> select(Expression<T> expr) {
-        return new JPAQuery<>(em).select(expr);
-    }
 
     @Override
     public Optional<ReviewBookDomain> findByIdForUpdate(UUID bookId) {

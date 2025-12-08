@@ -2,7 +2,7 @@ package com.codeit.sb06deokhugamteam2.review.adapter.out.repository;
 
 import com.codeit.sb06deokhugamteam2.like.adapter.out.entity.ReviewLike;
 import com.codeit.sb06deokhugamteam2.like.adapter.out.entity.ReviewLikeId;
-import com.codeit.sb06deokhugamteam2.review.application.port.out.LoadReviewLikeRepositoryPort;
+import com.codeit.sb06deokhugamteam2.review.application.port.out.LoadReviewLikePort;
 import com.codeit.sb06deokhugamteam2.review.domain.model.ReviewLikeDomain;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public class ReviewLikeJpaRepositoryAdapter implements LoadReviewLikeRepositoryPort {
+public class ReviewLikeJpaRepository implements LoadReviewLikePort {
 
     @PersistenceContext
     private EntityManager em;
