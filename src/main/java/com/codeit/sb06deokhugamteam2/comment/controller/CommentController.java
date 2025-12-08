@@ -68,4 +68,24 @@ public class CommentController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> softDeleteComment(
+            @PathVariable UUID commentId,
+            @RequestHeader("Deokhugam-Request-User-Id") UUID userID
+    ) {
+        commentService.softDelete(commentId, userID);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{commentId}/hard")
+    public ResponseEntity<Void> hardDeleteComment(
+            @PathVariable UUID commentId,
+            @RequestHeader("Deokhugam-Request-User-Id") UUID userID
+    ) {
+        commentService.hardDelete(commentId, userID);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

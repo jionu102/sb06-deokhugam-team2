@@ -4,7 +4,7 @@ import com.codeit.sb06deokhugamteam2.review.adapter.out.entity.Review;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -20,7 +20,7 @@ import java.util.UUID;
 @Table(name = "books")
 @Getter
 @Builder
-@SoftDelete
+@SQLRestriction("deleted = false")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
@@ -71,6 +71,9 @@ public class Book {
     @LastModifiedDate
     @Column(nullable = false, name = "updated_at")
     private Instant updatedAt;
+
+    @Column(nullable = false)
+    private Boolean deleted;
 
     public void updateThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;

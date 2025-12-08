@@ -183,24 +183,39 @@ public class CommentService {
         );
     }
 
-//    public void softDelete(UUID commentId, UUID userId) {
-//        log.info("softDelete comment: commentId={}, userId={}", commentId, userId);
-//
-//        Comment foundComment = commentRepository.findById(commentId)
-//                .orElseThrow(() -> new CommentException(ErrorCode.INVALID_DATA, Map.of("commentId", commentId), HttpStatus.NOT_FOUND));
-//
-//        if (!foundComment.getUser().getId().equals(userId)) {
-//            throw new CommentException(
-//                    ErrorCode.INVALID_USER_DATA,
-//                    Map.of("commentId", commentId),
-//                    HttpStatus.FORBIDDEN
-//            );
-//        }
-//
-//        commentRepository.delete(foundComment);
-//
-//
-//    }
+    public void softDelete(UUID commentId, UUID userId) {
+        log.info("softDelete comment: commentId={}, userId={}", commentId, userId);
+
+        Comment foundComment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(ErrorCode.INVALID_DATA, Map.of("commentId", commentId), HttpStatus.NOT_FOUND));
+
+        if (!foundComment.getUser().getId().equals(userId)) {
+            throw new CommentException(
+                    ErrorCode.INVALID_USER_DATA,
+                    Map.of("commentId", commentId),
+                    HttpStatus.FORBIDDEN
+            );
+        }
+
+        commentRepository.delete(foundComment);
+    }
+
+    public void hardDelete(UUID commentId, UUID userId) {
+        log.info("hardDelete comment: commentId={}, userId={}", commentId, userId);
+
+        Comment foundComment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(ErrorCode.INVALID_DATA, Map.of("commentId", commentId), HttpStatus.NOT_FOUND));
+
+        if (!foundComment.getUser().getId().equals(userId)) {
+            throw new CommentException(
+                    ErrorCode.INVALID_USER_DATA,
+                    Map.of("commentId", commentId),
+                    HttpStatus.FORBIDDEN
+            );
+        }
+
+        commentRepository.hardDeleteById(commentId);
+    }
 
 
 

@@ -4,56 +4,32 @@ import com.codeit.sb06deokhugamteam2.book.entity.Book;
 import com.codeit.sb06deokhugamteam2.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@SoftDelete
 @Table(name = "reviews")
+@SQLRestriction("deleted = false")
 public class Review {
 
     @Id
-    @Column(name = "id", nullable = false)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @NotFound(action = NotFoundAction.IGNORE)
-    @JoinColumn(name = "book_id", nullable = false)
+    @JoinColumn(name = "book_id", updatable = false, nullable = false)
     private Book book;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @NotFound(action = NotFoundAction.IGNORE)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", updatable = false, nullable = false)
     private User user;
 
-    @OneToMany(
-            fetch = FetchType.LAZY,
-            mappedBy = "review",
-            cascade = {
-                    CascadeType.PERSIST,
-                    CascadeType.MERGE
-            },
-            orphanRemoval = true
-    )
-    private Set<ReviewLike> likes = new HashSet<>();
-
     @NotNull
-    @OneToOne(
-            mappedBy = "review",
-            cascade = {
-                    CascadeType.PERSIST,
-                    CascadeType.MERGE
-            },
-            orphanRemoval = true
-    )
+    @OneToOne(mappedBy = "review", cascade = CascadeType.ALL)
     private ReviewStat reviewStat;
 
     @NotNull
@@ -65,12 +41,16 @@ public class Review {
     private String content;
 
     @NotNull
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;
 
     @NotNull
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @NotNull
+    @Column(name = "deleted", nullable = false)
+    private Boolean deleted;
 
     public Review id(UUID id) {
         this.id = id;
@@ -87,27 +67,9 @@ public class Review {
         return this;
     }
 
-    public Review addLike(ReviewLike reviewLike) {
-        this.likes.add(reviewLike);
-        reviewLike.review(this);
-        return this;
-    }
-
-    public Review removeLike(ReviewLike reviewLike) {
-        this.likes.remove(reviewLike);
-        reviewLike.review(null);
-        return this;
-    }
-
     public Review reviewStat(ReviewStat reviewStat) {
         this.reviewStat = reviewStat;
         reviewStat.review(this);
-        return this;
-    }
-
-    public Review removeReviewStat(ReviewStat reviewStat) {
-        this.reviewStat = null;
-        reviewStat.review(null);
         return this;
     }
 
@@ -131,6 +93,11 @@ public class Review {
         return this;
     }
 
+    public Review deleted(Boolean deleted) {
+        this.deleted = deleted;
+        return this;
+    }
+
     public UUID id() {
         return id;
     }
@@ -141,10 +108,6 @@ public class Review {
 
     public User user() {
         return user;
-    }
-
-    public Set<ReviewLike> likes() {
-        return likes;
     }
 
     public ReviewStat reviewStat() {
@@ -165,5 +128,9 @@ public class Review {
 
     public Instant updatedAt() {
         return updatedAt;
+    }
+
+    public Boolean deleted() {
+        return deleted;
     }
 }

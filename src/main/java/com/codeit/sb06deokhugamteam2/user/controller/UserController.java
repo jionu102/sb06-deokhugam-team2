@@ -3,13 +3,15 @@ package com.codeit.sb06deokhugamteam2.user.controller;
 
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import com.codeit.sb06deokhugamteam2.common.enums.RankingType;
+import com.codeit.sb06deokhugamteam2.common.exception.ErrorCode;
+import com.codeit.sb06deokhugamteam2.common.exception.exceptions.BasicException;
 import com.codeit.sb06deokhugamteam2.user.dto.CursorPageResponse;
 import com.codeit.sb06deokhugamteam2.user.dto.PowerUserDto;
 import com.codeit.sb06deokhugamteam2.user.dto.UserDto;
 import com.codeit.sb06deokhugamteam2.user.dto.UserLoginRequest;
 import com.codeit.sb06deokhugamteam2.user.dto.UserRegisterRequest;
-import com.codeit.sb06deokhugamteam2.user.dto.UserUpdateRequest;
 import com.codeit.sb06deokhugamteam2.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.Collections;
 import java.util.UUID;
 
 
@@ -51,8 +53,18 @@ public class UserController {
     @PatchMapping("/{userId}")
     public ResponseEntity<UserDto> updateNickname(
             @PathVariable UUID userId,
-            @Valid @RequestBody UserUpdateRequest request) {
-        UserDto userDto = userService.updateNickname(userId, request);
+            HttpServletRequest request) {
+        String rawNicknameString;
+        try {
+            rawNicknameString = request.getReader().lines()
+                    .reduce("", (accumulator, actual) -> accumulator + actual);
+        } catch (java.io.IOException e) {
+            throw new BasicException(ErrorCode.INVALID_USER_DATA,
+                    Collections.singletonMap("error", "요청 본문, 읽기 실패"),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        UserDto userDto = userService.updateNicknameFromRawString(userId, rawNicknameString);
         return ResponseEntity.ok(userDto);
     }
 
@@ -67,14 +79,6 @@ public class UserController {
         userService.hardDeleteUser(userId);
         return ResponseEntity.noContent().build();
     }
-
-    @PostMapping("/batch-hard-delete")
-    public ResponseEntity<Map<String, Integer>> batchHardDeleteOldSoftDeletedUsers(
-            @RequestParam(defaultValue = "24") double hoursAgo) { // 기본값 1일(24시간)
-        int deletedCount = userService.batchHardDeleteOldSoftDeletedUsers(hoursAgo);
-        return ResponseEntity.ok(Map.of("deletedCount", deletedCount));
-    }
-
 
     @GetMapping("/power")
     public ResponseEntity<CursorPageResponse<PowerUserDto>> getPowerUsers(

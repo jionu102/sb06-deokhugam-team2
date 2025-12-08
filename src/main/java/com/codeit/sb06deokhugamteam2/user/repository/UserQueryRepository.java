@@ -4,6 +4,7 @@ package com.codeit.sb06deokhugamteam2.user.repository;
 import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import com.codeit.sb06deokhugamteam2.user.dto.CursorPageResponse;
 import com.codeit.sb06deokhugamteam2.user.dto.PowerUserDto;
+import com.codeit.sb06deokhugamteam2.user.entity.User;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -16,6 +17,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.codeit.sb06deokhugamteam2.comment.entity.QComment.comment;
@@ -146,5 +148,23 @@ public class UserQueryRepository {
 
         // 해당 기간(startInstant 이후)에 작성된 리뷰만 포함하도록 조건 설정
         return review.createdAt.goe(startInstant);
+    }
+
+    //물리 삭제시 N+1 문제 방지 및 JPA Cascade 작동
+    public Optional<User> findByEmailWithDeleted(String email) {
+        return Optional.ofNullable(queryFactory
+                .selectFrom(user)
+                .where(user.email.eq(email))
+                .fetchOne());
+    }
+
+    //통합 테스트용
+    public Optional<User> findByIdWithReviewsAndComments(UUID userId) {
+        return Optional.ofNullable(queryFactory
+                .selectFrom(user)
+                .leftJoin(user.reviews, review).fetchJoin()
+                .leftJoin(user.comments, comment).fetchJoin()
+                .where(user.id.eq(userId))
+                .fetchOne());
     }
 }
