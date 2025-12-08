@@ -38,16 +38,7 @@ public class BookMapper {
         return 0.0;
     }
 
-    public PopularBookDto toDto(Dashboard dashboard, Book book, BookStats bookStats, PeriodType period) {
-
-        double rating;
-
-        if (bookStats.getReviewCount() == 0) {
-            rating = 0.0;
-        } else {
-            rating = (double) bookStats.getRatingSum() / bookStats.getReviewCount();
-        }
-
+    public PopularBookDto toDto(Dashboard dashboard, Book book, PeriodType period, long reviewCount, double rating) {
         return PopularBookDto.builder()
                 .id(dashboard.getId())
                 .bookId(dashboard.getEntityId())
@@ -57,7 +48,7 @@ public class BookMapper {
                 .period(period)
                 .rank(dashboard.getRank())
                 .score(dashboard.getScore())
-                .reviewCount(bookStats.getReviewCount())
+                .reviewCount(reviewCount)
                 .rating(rating)
                 .createdAt(dashboard.getCreatedAt())
                 .build();

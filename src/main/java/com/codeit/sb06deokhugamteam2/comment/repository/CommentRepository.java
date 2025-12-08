@@ -14,4 +14,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Comment
     @Query(value = "DELETE FROM COMMENTS WHERE id = :commentId", nativeQuery = true)
     void hardDeleteById(@Param("commentId") UUID commentId);
 
+    @Modifying
+    @Query("UPDATE Comment c SET c.deleted = true WHERE c.id = :commentId")
+    void delete(@Param("commentId") UUID commentId);
 }

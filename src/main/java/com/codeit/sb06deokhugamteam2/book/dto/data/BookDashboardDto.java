@@ -6,10 +6,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Builder
-public record BookScoreDto(
+public record BookDashboardDto(
         UUID id,
         Instant createdAt,
         long periodReviewCount,
-        double periodRating
+        double periodRating,
+        double periodScore
 ) {
 }

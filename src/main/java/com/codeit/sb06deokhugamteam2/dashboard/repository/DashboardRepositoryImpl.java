@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -31,6 +34,13 @@ public class DashboardRepositoryImpl implements DashboardRepositoryCustom {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(dashboard.rankingType.eq(rankingType));
         builder.and(dashboard.periodType.eq(period));
+
+        // 오늘 생성된 데이터만 조회 -- 00:00 기준
+        Instant today = LocalDate.now()
+                .atStartOfDay(ZoneId.of("UTC"))
+                .toInstant();
+
+        builder.and(dashboard.createdAt.goe(today));
 
         if (cursor != null && after != null) {
             if (direction == Sort.Direction.ASC) {
