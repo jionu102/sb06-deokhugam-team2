@@ -20,6 +20,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Validator;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -36,8 +38,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserQueryRepository userQueryRepository;
     private final UserMapper userMapper;
-//    private final ReviewService reviewService;
-//    private final CommentService commentService;
+    private final Validator validator;
 
     @Transactional
     public UserDto register(UserRegisterRequest request) {
@@ -92,12 +93,29 @@ public class UserService {
     }
 
     @Transactional
-    public UserDto updateNickname(UUID userId, UserUpdateRequest request) {
+    public UserDto updateNicknameFromRawString(UUID userId, String rawNicknameString) {
+
+        String nickname = rawNicknameString.trim().replaceAll("^\"|\"$", "");
+        UserUpdateRequest validationRequest = new UserUpdateRequest(nickname);
+        org.springframework.validation.Errors errors = new BeanPropertyBindingResult(validationRequest, "userUpdateRequest");
+        validator.validate(validationRequest, errors);
+
+        if (errors.hasErrors()) {
+
+            String defaultMessage = errors.getFieldError().getDefaultMessage();
+            throw new BasicException(
+                    ErrorCode.INVALID_USER_DATA,
+                    Collections.singletonMap("message", defaultMessage),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BasicException(ErrorCode.USER_NOT_FOUND,
                         Collections.emptyMap(), HttpStatus.NOT_FOUND));
 
-        user.updateNickname(request.nickname());
+        user.updateNickname(validationRequest.getNickname());
+
         return userMapper.toDto(user);
     }
 
@@ -112,10 +130,12 @@ public class UserService {
     @Transactional
     public void hardDeleteUser(UUID userId) {
 
-        // reviewService.deleteAllByUserId(userId);
-        // commentService.deleteAllByUserId(userId);
+        // 1. 사용자 엔티티 조회 (리뷰/댓글 목록 Fetch Join을 통해 한 번에 로딩)
+        User user = userQueryRepository.findByIdWithReviewsAndComments(userId)
+                .orElseThrow(() -> new BasicException(ErrorCode.USER_NOT_FOUND,
+                        Collections.emptyMap(), HttpStatus.NOT_FOUND));
 
-        userRepository.hardDeleteUserById(userId);
+        userRepository.delete(user);
     }
 
     // 논리 삭제 후 1일이 경과한 사용자, 물리삭제
@@ -135,12 +155,15 @@ public class UserService {
         //일괄 물리 삭제 실행 (Hard Delete)
         for (UUID userId : userIds) {
 
-//      //연관 데이터 삭제 (필수)
-//      deleteReviewService.deleteAllByUserId(userId);
-//      commentService.deleteAllByUserId(userId);
+            User user = userQueryRepository.findByIdWithReviewsAndComments(userId)
+                    .orElse(null); // 배치에서는 404 예외 대신 null 처리 후 continue (이미 논리 삭제 대상이므로)
 
-            //물리 삭제 실행
-            userRepository.hardDeleteUserById(userId);
+            if (user == null) {
+                log.warn("Batch Hard Delete: User {} not found during review cleanup, skipping.", userId);
+                continue;
+            }
+
+            userRepository.delete(user);
         }
 
         log.info("Batch Hard Delete: {} users successfully hard deleted.", userIds.size());

@@ -1,6 +1,7 @@
 package com.codeit.sb06deokhugamteam2.book.service;
 
 import com.codeit.sb06deokhugamteam2.book.client.NaverSearchClient;
+import com.codeit.sb06deokhugamteam2.book.client.OcrClient;
 import com.codeit.sb06deokhugamteam2.book.dto.data.BookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.data.PopularBookDto;
 import com.codeit.sb06deokhugamteam2.book.dto.request.BookCreateRequest;
@@ -32,6 +33,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -54,9 +56,7 @@ public class BookService {
     private final BookCursorMapper bookCursorMapper;
     private final ObjectMapper objectMapper;
     private final NaverSearchClient naverSearchClient;
-
-    @Value("${spring.ocr.api-key}")
-    private String ocrApiKey;
+    private final OcrClient ocrClient;
 
     public BookDto create(BookCreateRequest bookCreateRequest, Optional<BookImageCreateRequest> optionalBookImageCreateRequest) {
         if (bookRepository.findByIsbn(bookCreateRequest.getIsbn()).isPresent()) {
@@ -197,7 +197,7 @@ public class BookService {
 
         try {
 
-            String json = callOcrApi(image);
+            String json = ocrClient.callOcrApi(image);
 
             JsonNode root = objectMapper.readTree(json);
 
@@ -255,37 +255,5 @@ public class BookService {
         }
         List<BookDto> bookDtos = bookDtoSlice.getContent();
         return bookDtos.get(bookDtos.size() - 1).getCreatedAt();
-    }
-
-    private String callOcrApi(MultipartFile image) throws IOException {
-
-        final String url = "https://api.ocr.space/parse/image";
-        final String language = "eng";
-
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("apikey", ocrApiKey)
-                .addFormDataPart("language", language)
-                .addFormDataPart("file", image.getOriginalFilename(),
-                        RequestBody.create(
-                                image.getBytes(),
-                                MediaType.parse(image.getContentType())
-                        ))
-                .build();
-
-        Request request = new Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build();
-
-        OkHttpClient client = new OkHttpClient();
-
-        try (Response response = client.newCall(request).execute()) {
-            return response.body().string();
-        } catch (IOException e) {
-            throw new OcrException(ErrorCode.OCR_API_ERROR,
-                    Map.of("message", ErrorCode.OCR_API_ERROR.getMessage()),
-                    HttpStatus.BAD_GATEWAY);
-        }
     }
 }
