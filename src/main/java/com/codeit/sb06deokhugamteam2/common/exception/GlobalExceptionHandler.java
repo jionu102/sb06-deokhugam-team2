@@ -23,7 +23,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @Slf4j
 @RestControllerAdvice
-@ResponseBody
 public class GlobalExceptionHandler {
 
 //<editor-fold desc="커스텀 예외처리 부분들">

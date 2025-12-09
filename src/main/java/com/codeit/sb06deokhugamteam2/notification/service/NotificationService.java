@@ -4,7 +4,6 @@ import com.codeit.sb06deokhugamteam2.notification.entity.dto.NotificaionCursorDt
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.NotificationDto;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.request.NotificationUpdateRequest;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.response.NotificationCursorResponse;
-import java.util.List;
 import java.util.UUID;
 
 public interface NotificationService {

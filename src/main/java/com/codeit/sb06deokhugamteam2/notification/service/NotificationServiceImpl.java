@@ -8,7 +8,6 @@ import com.codeit.sb06deokhugamteam2.notification.entity.dto.NotificationDto;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.request.NotificationUpdateRequest;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.response.NotificationCursorResponse;
 import com.codeit.sb06deokhugamteam2.notification.repository.NotificationRepository;
-import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -18,13 +17,9 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +66,7 @@ public class NotificationServiceImpl implements NotificationService{
   }
 
   @Override
-  @Transactional
+  @Transactional(readOnly = true)
   public NotificationCursorResponse getUserNotifications(NotificaionCursorDto dto) {
 
     if(dto == null || dto.userId() == null)

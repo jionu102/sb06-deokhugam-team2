@@ -3,18 +3,14 @@ package com.codeit.sb06deokhugamteam2.notification.repository;
 import com.codeit.sb06deokhugamteam2.notification.entity.Notification;
 import com.codeit.sb06deokhugamteam2.notification.entity.QNotification;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.NotificaionCursorDto;
-import com.codeit.sb06deokhugamteam2.notification.entity.dto.NotificationDto;
-import com.codeit.sb06deokhugamteam2.notification.entity.dto.response.NotificationCursorResponse;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
 @RequiredArgsConstructor
@@ -49,7 +45,7 @@ public class NotificationRepositoryDslImpl implements NotificationRepositoryDsl{
       return n.createdAt.lt(dto.after())
           .or(
               n.createdAt.eq(dto.after())
-                  .and(n.id.lt(UUID.fromString(dto.cursor())))
+                  .and(n.id.loe(UUID.fromString(dto.cursor())))
           );
     }
     else
@@ -57,7 +53,7 @@ public class NotificationRepositoryDslImpl implements NotificationRepositoryDsl{
       return n.createdAt.gt(dto.after())
           .or(
               n.createdAt.eq(dto.after())
-                  .and(n.id.gt(UUID.fromString(dto.cursor())))
+                  .and(n.id.goe(UUID.fromString(dto.cursor())))
           );
     }
   }

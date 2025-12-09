@@ -3,7 +3,6 @@ package com.codeit.sb06deokhugamteam2.notification.entity.dto;
 import com.codeit.sb06deokhugamteam2.notification.entity.Notification;
 import java.time.Instant;
 import java.util.UUID;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 

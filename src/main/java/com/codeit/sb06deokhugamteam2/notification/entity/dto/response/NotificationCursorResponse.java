@@ -3,8 +3,6 @@ package com.codeit.sb06deokhugamteam2.notification.entity.dto.response;
 import com.codeit.sb06deokhugamteam2.notification.entity.dto.NotificationDto;
 import java.time.Instant;
 import java.util.List;
-import lombok.Builder;
-import lombok.Getter;
 
 public record NotificationCursorResponse(
     List<NotificationDto> content,

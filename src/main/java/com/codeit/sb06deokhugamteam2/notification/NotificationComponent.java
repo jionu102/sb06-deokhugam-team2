@@ -8,6 +8,7 @@ import com.codeit.sb06deokhugamteam2.notification.entity.dto.request.Notificatio
 import com.codeit.sb06deokhugamteam2.notification.repository.NotificationRepository;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class NotificationComponent {
   private final NotificationRepository repository;
 
-  public NotificationDto saveNotification(NotificationCreateRequest request) {
+  public NotificationDto saveNotification(@NotNull NotificationCreateRequest request) {
 
     try
     {
