@@ -31,7 +31,7 @@ import java.util.UUID;
 @Table(name = "users")
 @SQLDelete(sql = """
         UPDATE users
-        SET deleted_at = current_timestamp()
+        SET deleted_at = current_timestamp
         WHERE id = ?
         """)
 @SQLRestriction("deleted_at IS NULL")

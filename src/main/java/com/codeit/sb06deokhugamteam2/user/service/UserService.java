@@ -4,6 +4,7 @@ import com.codeit.sb06deokhugamteam2.common.enums.PeriodType;
 import com.codeit.sb06deokhugamteam2.common.enums.RankingType;
 import com.codeit.sb06deokhugamteam2.common.exception.ErrorCode;
 import com.codeit.sb06deokhugamteam2.common.exception.exceptions.BasicException;
+import com.codeit.sb06deokhugamteam2.common.exception.exceptions.UserException;
 import com.codeit.sb06deokhugamteam2.user.dto.CursorPageResponse;
 import com.codeit.sb06deokhugamteam2.user.dto.PowerUserDto;
 import com.codeit.sb06deokhugamteam2.user.dto.UserDto;
@@ -47,7 +48,7 @@ public class UserService {
     public UserDto register(UserRegisterRequest request) {
 
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new BasicException(ErrorCode.DUPLICATE_EMAIL, Collections.emptyMap(),
+            throw new UserException(ErrorCode.DUPLICATE_EMAIL, Collections.emptyMap(),
                     HttpStatus.CONFLICT);
         }
 
@@ -59,14 +60,17 @@ public class UserService {
 
     public UserDto login(UserLoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new NoSuchElementException("입력한 사용자 정보가 잘못 되었습니다"));
+                .orElseThrow(() -> new UserException(ErrorCode.INVALID_USER_DATA, Collections.emptyMap(),
+                    HttpStatus.BAD_REQUEST));
 
         if (user.getDeletedAt() != null) {
-            throw new NoSuchElementException("탈퇴했거나 비활성화된 사용자입니다");
+            throw new UserException(ErrorCode.INVALID_USER, Collections.emptyMap(),
+                HttpStatus.BAD_REQUEST);
         }
 
         if (!request.password().equals(user.getPassword())) {
-            throw new NoSuchElementException("입력한 사용자 정보가 잘못 되었습니다");
+            throw new UserException(ErrorCode.INVALID_USER_DATA, Collections.emptyMap(),
+                HttpStatus.BAD_REQUEST);
         }
 
         return userMapper.toDto(user);
@@ -75,7 +79,8 @@ public class UserService {
     public UserDto getUserInfo(UUID userId) {
         //논리 삭제된 사용자, 조회에서 제외
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND, Collections.emptyMap(),
+                    HttpStatus.BAD_REQUEST));
 
         return userMapper.toDto(user);
     }
@@ -84,12 +89,11 @@ public class UserService {
     public void softDeleteUser(UUID userId) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BasicException(ErrorCode.USER_NOT_FOUND,
+                .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND,
                         Collections.emptyMap(), HttpStatus.NOT_FOUND));
 
-//        reviewRepository.softDeleteAllByUserId(userId);
-//        commentRepository.softDeleteAllByUserId(userId);
-
+        userRepository.softDeleteAllReviewByUserId(userId);
+        userRepository.softDeleteAllCommentByUserId(userId);
         userRepository.delete(user);
     }
 
@@ -104,7 +108,7 @@ public class UserService {
         if (errors.hasErrors()) {
 
             String defaultMessage = errors.getFieldError().getDefaultMessage();
-            throw new BasicException(
+            throw new UserException(
                     ErrorCode.INVALID_USER_DATA,
                     Collections.singletonMap("message", defaultMessage),
                     HttpStatus.BAD_REQUEST
@@ -112,7 +116,8 @@ public class UserService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("닉네임을 수정할 사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND, Collections.emptyMap(),
+          HttpStatus.BAD_REQUEST));
 
         user.updateNickname(validationRequest.getNickname());
 
@@ -132,7 +137,8 @@ public class UserService {
 
         // 1. 사용자 엔티티 조회 (리뷰/댓글 목록 Fetch Join을 통해 한 번에 로딩)
         User user = userQueryRepository.findByIdWithReviewsAndComments(userId)
-                .orElseThrow(() -> new NoSuchElementException("물리 삭제할 사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND, Collections.emptyMap(),
+                    HttpStatus.BAD_REQUEST));
 
         userRepository.delete(user);
     }

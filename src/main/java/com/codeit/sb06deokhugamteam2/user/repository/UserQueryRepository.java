@@ -94,7 +94,13 @@ public class UserQueryRepository {
             content.remove(pageable.getPageSize()); // 마지막 요소 제거
             // 다음 커서 값 설정 (Score 정렬이 복합적일 경우 커서 값도 복합적으로 설정)
             // 현재는 createdAt 기준으로만 커서를 설정한다고 가정
-            nextAfterString = content.get(content.size() - 1).createdAt().toString();
+            nextAfterString = content.get(content.size() - 1).getCreatedAt().toString();
+        }
+
+        //next step 작업. 개선 필요
+        int rank = 1;
+        for(PowerUserDto item : content) {
+          item.setRank(rank++);
         }
 
         // CursorPageResponse 객체 반환

@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
     INVALID_USER_DATA("입력한 사용자 정보가 잘못 되었습니다"),
+    INVALID_USER("탈퇴했거나 비활성화된 사용자입니다"),
     INVALID_USER_PASSWORD("비밀번호가 맞지 않습니다."),
     NO_PATH_VARIABLE("Path 값이 없습니다"),
     NO_ID_VARIABLE("ID 값이 없습니다."),
