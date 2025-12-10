@@ -42,14 +42,14 @@ public class CommentQueryRepositoryImpl implements CommentQueryRepository {
                 condition.and(
                         comment.createdAt.lt(after)
                                 .or(comment.createdAt.eq(after)
-                                        .and(cursor != null ? comment.id.loe(cursor) : Expressions.TRUE)
+                                        .and(cursor != null ? comment.id.lt(cursor) : Expressions.TRUE)
                                 )
                 );
             } else {
                 condition.and(
                         comment.createdAt.gt(after)
                                 .or(comment.createdAt.eq(after)
-                                        .and(cursor != null ? comment.id.goe(cursor) : Expressions.TRUE)
+                                        .and(cursor != null ? comment.id.gt(cursor) : Expressions.TRUE)
                                 )
                 );
             }
